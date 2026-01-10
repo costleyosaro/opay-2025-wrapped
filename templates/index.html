@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPay Statement Analyzer - AI-Powered Financial Intelligence</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* ========================================
+           FONTS & BASE STYLES
+        ======================================== */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* ========================================
+           OPAY BRAND COLORS
+        ======================================== */
+        .opay-green {
+            background-color: #05652D;
+        }
+        .opay-green-light {
+            background-color: #0a8f44;
+        }
+        .opay-green-lighter {
+            background-color: #e8f5e9;
+        }
+        .text-opay-green {
+            color: #05652D;
+        }
+        .border-opay-green {
+            border-color: #05652D;
+        }
+        
+        /* ========================================
+           GRADIENTS
+        ======================================== */
+        .gradient-opay {
+            background: linear-gradient(135deg, #05652D 0%, #0a8f44 100%);
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #05652D 0%, #0a8f44 50%, #05652D 100%);
+        }
+        
+        /* ========================================
+           HOVER EFFECTS
+        ======================================== */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(5, 101, 45, 0.2);
+        }
+        
+        .upload-area {
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(5, 101, 45, 0.15);
+        }
+        
+        .feature-icon {
+            transition: all 0.3s ease;
+        }
+        .feature-icon:hover {
+            transform: rotate(10deg) scale(1.1);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* ========================================
+           ANIMATIONS
+        ======================================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .chat-message {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+            }
+            30% {
+                opacity: 1;
+            }
+        }
+        
+        .dot {
+            animation: typing 1.4s infinite;
+        }
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        /* ========================================
+           CHAT STYLES
+        ======================================== */
+        #chatMessages {
+            scroll-behavior: smooth;
+        }
+        
+        .typing-indicator {
+            display: none;
+        }
+        .typing-indicator.active {
+            display: flex;
+        }
+        /* ========================================
+           DARK MODE STYLES
+        ======================================== */
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        body.dark-mode .bg-white {
+            background-color: #1b1b1b !important;
+        }
+        body.dark-mode .text-gray-900 {
+            color: #ffffff !important;
+        }
+        body.dark-mode .text-gray-600 {
+            color: #cccccc !important;
+        }
+        body.dark-mode .border-gray-200 {
+            border-color: #333333 !important;
+        }
+        body.dark-mode .border-gray-100 {
+            border-color: #444444 !important;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- ========================================
+         NAVIGATION
+    ======================================== -->
+    <nav class="opay-green shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo Section -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
+                            <img src="/static/images/opay-logo.png" alt="OPay Logo" class="w-4/5 h-auto">
+                        </div>
+                        <div>
+                            <h1 class="text-white text-2xl font-bold">OPay Statement Analyzer</h1>
+                            <p class="text-white/80 text-xs">AI-Powered Financial Intelligence</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="#features" class="text-white hover:text-white/80 transition-colors font-medium">Features</a>
+                    <a href="#how-it-works" class="text-white hover:text-white/80 transition-colors font-medium">How It Works</a>
+                    <a href="#upload" class="bg-white text-opay-green px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-100 transition-all shadow-md">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- ========================================
+         HERO SECTION
+    ======================================== -->
+    <section class="hero-gradient text-white py-20 px-4">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="animate-fadeInUp">
+                <h2 class="text-5xl md:text-6xl font-bold mb-6">
+                    Unlock Your Financial Insights
+                </h2>
+                <p class="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
+                    Upload your OPay bank statement and get AI-powered analysis, personalized advice, and actionable insights in seconds.
+                </p>
+                
+                <!-- CTA Buttons -->
+                <div class="flex gap-4 justify-center flex-wrap">
+                    <button onclick="document.getElementById('upload').scrollIntoView({behavior: 'smooth'})" 
+                            class="bg-white text-opay-green px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all shadow-xl">
+                        📊 Analyze My Statement
+                    </button>
+                    <button onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})" 
+                            class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/10 transition-all">
+                        ▶️ See How It Works
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats Banner -->
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
+                    <div class="text-4xl font-bold mb-2">10,000+</div>
+                    <div class="text-white/90">Statements Analyzed</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
+                    <div class="text-4xl font-bold mb-2">98%</div>
+                    <div class="text-white/90">Accuracy Rate</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
+                    <div class="text-4xl font-bold mb-2">24/7</div>
+                    <div class="text-white/90">AI Assistant</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ========================================
+         FEATURES SECTION
+    ======================================== -->
+    <section id="features" class="py-20 px-4 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h3 class="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h3>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Everything you need to understand and improve your finances</p>
+            </div>
+            
+            <!-- Feature Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- AI Analysis -->
+                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
+                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
+                        🤖
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">AI Analysis</h4>
+                    <p class="text-gray-600">Advanced AI powered by OpenAI GPT-4 analyzes your spending patterns and financial behavior</p>
+                </div>
+                
+                <!-- Smart Insights -->
+                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
+                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
+                        💡
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Smart Insights</h4>
+                    <p class="text-gray-600">Get personalized recommendations to optimize your spending and increase savings</p>
+                </div>
+                
+                <!-- Visual Reports -->
+                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
+                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
+                        📊
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Visual Reports</h4>
+                    <p class="text-gray-600">Beautiful charts and graphs that make your financial data easy to understand</p>
+                </div>
+                
+                <!-- 100% Secure -->
+                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
+                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
+                        🔒
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">100% Secure</h4>
+                    <p class="text-gray-600">Bank-level encryption ensures your financial data is always protected and private</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ========================================
+         HOW IT WORKS SECTION
+    ======================================== -->
+    <section id="how-it-works" class="py-20 px-4 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h3 class="text-4xl font-bold text-gray-900 mb-4">How It Works</h3>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Get insights in 3 simple steps</p>
+            </div>
+            
+            <!-- Steps Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <!-- Step 1 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 gradient-opay rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-xl">
+                        1
+                    </div>
+                    <h4 class="text-2xl font-bold text-gray-900 mb-4">Upload Statement</h4>
+                    <p class="text-gray-600 text-lg">Upload your OPay bank statement in PDF, CSV, or Excel format. Drag and drop or click to browse.</p>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 gradient-opay rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-xl">
+                        2
+                    </div>
+                    <h4 class="text-2xl font-bold text-gray-900 mb-4">AI Processing</h4>
+                    <p class="text-gray-600 text-lg">Our AI analyzes your transactions, identifies patterns, and generates comprehensive insights.</p>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 gradient-opay rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-xl">
+                        3
+                    </div>
+                    <h4 class="text-2xl font-bold text-gray-900 mb-4">Get Advice</h4>
+                    <p class="text-gray-600 text-lg">Receive personalized financial advice and actionable recommendations to improve your finances.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ========================================
+         UPLOAD & CHAT SECTION
+    ======================================== -->
+    <section id="upload" class="py-20 px-4 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                
+                <!-- LEFT COLUMN: Upload Area & Stats -->
+                <div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-6">Upload Your Statement</h3>
+                    
+                    <!-- Upload Area -->
+                    <div id="uploadArea" class="upload-area bg-white border-3 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer mb-6">
+                        <input type="file" id="fileInput" accept=".pdf,.csv,.xlsx,.xls" class="hidden">
+                        <svg class="w-20 h-20 mx-auto text-opay-green mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <h4 class="text-xl font-bold text-gray-900 mb-2">Drop your file here or click to browse</h4>
+                        <p class="text-gray-600 mb-4">Supports CSV, XLSX (Max 10MB)</p>
+                        <button type="button" id="uploadBtn" class="gradient-opay text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all">
+                            Choose File
+                        </button>
+                    </div>
+                    
+                    <!-- File Info (Hidden Initially) -->
+                    <div id="fileInfo" class="hidden bg-green-50 border-2 border-opay-green rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 gradient-opay rounded-lg flex items-center justify-center text-white text-2xl">
+                                    📄
+                                </div>
+                                <div>
+                                    <p
+                                        id="fileName"
+                                        class="font-bold text-gray-900 text-lg
+                                                max-w-[14rem] sm:max-w-none
+                                                truncate sm:whitespace-normal sm:break-words"
+                                        title=""
+                                    ></p>
+
+                                    <p id="fileSize" class="text-sm text-gray-600"></p>
+                                </div>
+                            </div>
+                            <button type="button" id="removeFile" class="text-red-500 hover:text-red-700">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <button type="button" id="analyzeBtn" class="w-full gradient-opay text-white py-4 rounded-lg font-bold text-lg hover:shadow-lg transition-all">
+                            🚀 Analyze with AI
+                        </button>
+                    </div>
+                    <!-- Stats Display -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                            <div class="text-sm text-gray-600 mb-2">Spending vs Income Gap</div>
+                            <div
+                                id="totalBalance"
+                                class="font-bold text-opay-green
+                                        text-2xl sm:text-3xl
+                                        break-all sm:break-normal"
+                                >
+                                ₦0.00
+                            </div>
+
+                        </div>
+                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                            <div class="text-sm text-gray-600 mb-2">Transactions</div>
+                            <div id="transactionCount" class="text-3xl font-bold text-gray-900">0</div>
+                        </div>
+                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                            <div class="text-sm text-gray-600 mb-2">Total Income</div>
+                            <div id="totalIncome" class="text-3xl font-bold text-green-600">₦0</div>
+                        </div>
+                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                            <div class="text-sm text-gray-600 mb-2">Total Expenses</div>
+                            <div id="totalExpense" class="text-3xl font-bold text-red-600">₦0</div>
+                        </div>
+                    </div>
+                    <!-- Monthly Income vs Expenses Chart -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm mt-6">
+                    <h3 class="text-lg font-semibold mb-4">Monthly Income vs Expenses</h3>
+
+                    <!-- Chart wrapper with fixed height -->
+                    <div class="relative h-72">
+                        <canvas id="monthlyBarChart"></canvas>
+                    </div>
+                    </div>
+                    
+                    <!-- Secondary Insights Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+
+                        <!-- Top 10 Recipients -->
+                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm h-[260px] flex flex-col">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3">
+                                Top 10 Recipients
+                            </h3>
+
+                            <ul id="topRecipientsList"
+                                class="space-y-2 text-sm overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300">
+
+                        </div>
+
+                        <!-- Most Expensive Day -->
+                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm h-[260px] flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-2">
+                                    Most Expensive Day
+                                </h3>
+                                <p id="mostExpensiveDate" class="text-xs text-gray-500">
+                                    --
+                                </p>
+                            </div>
+
+                            <div class="text-2xl font-bold text-red-600">
+                                <span id="mostExpensiveAmount">₦0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Total Data Spend -->
+                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm h-[260px] flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-700 mb-2">
+                                    Data Spend
+                                </h3>
+                                <p class="text-xs text-gray-500">
+                                    Total spent on data & airtime
+                                </p>
+                            </div>
+
+                            <div class="text-2xl font-bold text-orange-600">
+                                <span id="dataSpend">₦0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Weekday Activity (Unified Card) -->
+                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                            
+                            <h3 class="text-sm font-semibold text-gray-700 mb-4">
+                                Transactions by Day of Week
+                            </h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+
+                                <!-- Pie Chart -->
+                                <div class="md:col-span-2 flex items-center justify-center">
+                                    <div class="relative h-[220px] w-full">
+                                        <canvas id="weekdayPieChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- Compact Insight -->
+                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 h-full flex flex-col justify-center">
+                                    
+                                    <p class="text-xs text-gray-500 mb-3">
+                                        Weekly Insight
+                                    </p>
+
+                                    <p class="text-sm text-gray-700 mb-1">
+                                        Most Active Day
+                                    </p>
+                                    <p class="text-xl font-bold text-gray-900 mb-3" id="mostActiveDay">
+                                        Friday
+                                    </p>
+
+                                    <div class="space-y-1">
+                                        <p class="text-sm text-gray-600">
+                                            Transactions:
+                                            <span class="font-semibold text-gray-900" id="mostActiveDayCount">
+                                                812
+                                            </span>
+                                        </p>
+
+                                        <p class="text-xs text-gray-500">
+                                            You transact
+                                            <span class="font-semibold text-opay-green" id="weekdayComparisonPct">
+                                                23%
+                                            </span>
+                                            more on this day than average
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+                        
+
+
+
+                    </div>
+
+
+
+                </div>
+                <!-- RIGHT COLUMN: AI Chat Interface -->
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col h-[700px]">
+
+                    <!-- Chat Header -->
+                    <div class="gradient-opay text-white p-6 flex-shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-2xl">
+                                🤖
+                            </div>
+                            <div>
+                                <div class="font-bold text-lg">AI Financial Assistant</div>
+                                <div class="text-sm text-white/80 flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-green-300 rounded-full pulse"></div>
+                                    <span>Online & Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages (SCROLLABLE) -->
+                    <div
+                        id="chatMessages"
+                        class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50"
+                    >
+                        <!-- Welcome Message -->
+                        <div class="flex gap-3 items-start chat-message">
+                            <div class="w-10 h-10 gradient-opay rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                                AI
+                            </div>
+                            <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm max-w-md border border-gray-100">
+                                <p class="text-gray-900">
+                                    👋 Hi! I’m your AI financial assistant.  
+                                    Upload your statement and ask me anything about your spending, savings, or habits.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Typing Indicator (hidden by default) -->
+                        <div class="typing-indicator hidden gap-3 items-start">
+                            <div class="w-10 h-10 gradient-opay rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                                AI
+                            </div>
+                            <div class="bg-white rounded-2xl rounded-tl-none px-5 py-3 shadow-sm border border-gray-100">
+                                <div class="flex gap-1">
+                                    <div class="dot w-2 h-2 bg-gray-400 rounded-full"></div>
+                                    <div class="dot w-2 h-2 bg-gray-400 rounded-full"></div>
+                                    <div class="dot w-2 h-2 bg-gray-400 rounded-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input (FIXED AT BOTTOM) -->
+                    <div class="border-t border-gray-200 p-4 bg-white flex-shrink-0">
+                        <div class="flex gap-3 items-center">
+                            <input
+                                type="text"
+                                id="chatInput"
+                                placeholder="Ask me anything about your finances..."
+                                class="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-opay-green focus:border-transparent"
+                            />
+                            <button
+                                type="button"
+                                id="sendBtn"
+                                class="gradient-opay text-white px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all"
+                            >
+                                Send
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <!-- ========================================
+         FOOTER
+    ======================================== -->
+    <footer class="opay-green text-white py-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <!-- About -->
+                <div>
+                    <h4 class="font-bold text-lg mb-4">OPay Statement Analyzer</h4>
+                    <p class="text-white/80 text-sm">AI-powered financial intelligence for smarter money management.</p>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-sm text-white/80">
+                        <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+                        <li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+                        <li><a href="#upload" class="hover:text-white transition-colors">Get Started</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Security -->
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Security</h4>
+                    <p class="text-white/80 text-sm">🔒 Your data is encrypted and secure. We never store your bank statements permanently.</p>
+                </div>
+            </div>
+            
+            <!-- Copyright -->
+            <div class="border-t border-white/20 pt-8 text-center text-white/80 text-sm">
+                <p>&copy; 2025 OPay Statement Analyzer. Powered by OpenAI GPT-4.</p>
+            </div>
+        </div>
+    </footer>
+    <!-- ========================================
+         JAVASCRIPT
+    ======================================== -->
+    <script>
+        // ========================================
+        // DOM ELEMENT REFERENCES
+        // ========================================
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const removeFile = document.getElementById('removeFile');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.querySelector('.typing-indicator');
+        let uploadedFile = null;
+        let analysisData = null;   // ✅ THIS LINE MUST EXIST
+
+        // ========================================
+        // FILE UPLOAD HANDLERS
+        // ========================================
+        
+        // Click button to open file dialog
+        uploadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.click();
+        });
+        // Click upload area to open file dialog
+        uploadArea.addEventListener('click', (e) => {
+            // Only trigger if clicking on the upload area itself, not the button
+            if (e.target === uploadArea || 
+                e.target.closest('svg') || 
+                e.target.closest('h4') || 
+                e.target.closest('p')) {
+                fileInput.click();
+            }
+        });
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        // Drag and Drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-opay-green', 'bg-opay-green-lighter');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('border-opay-green', 'bg-opay-green-lighter');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-opay-green', 'bg-opay-green-lighter');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        // ========================================
+        // FILE HANDLING FUNCTIONS
+        // ========================================
+        
+        function handleFile(file) {
+            const allowedTypes = ['.pdf', '.csv', '.xlsx', '.xls'];
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+            
+            // Validate file type
+            if (!allowedTypes.includes(fileExt)) {
+                addAIMessage('⚠️ Please upload a valid file format (PDF, CSV, or XLSX).');
+                return;
+            }
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                addAIMessage('⚠️ File size must be less than 10MB.');
+                return;
+            }
+            // Store file and update UI
+            uploadedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.remove('hidden');
+            uploadArea.classList.add('hidden');
+            addAIMessage(`✅ Perfect! I received your file "${file.name}". Click "Analyze with AI" to start the analysis, or ask me any questions!`);
+        }
+        // Remove file handler
+        removeFile.addEventListener('click', () => {
+            uploadedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            uploadArea.classList.remove('hidden');
+            addAIMessage('File removed. Feel free to upload another statement when ready!');
+        });
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        // ========================================
+        // ANALYZE BUTTON - API INTEGRATION
+        // ========================================
+        
+        analyzeBtn.addEventListener('click', async () => {
+            if (!uploadedFile) {
+                addAIMessage('⚠️ Please upload a file before analysis.');
+                return;
+            }
+            showTypingIndicator();
+            const formData = new FormData();
+            formData.append('file', uploadedFile);
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                analysisData = data;
+
+                console.log("FULL BACKEND RESPONSE:", data);
+                console.log("CATEGORIES:", data.categories);
+
+                hideTypingIndicator();
+
+                if (data.error) {
+                    addAIMessage(`❌ Error: ${data.error}`);
+                    console.error(data.traceback || '');
+                    return;
+                }
+                
+                // Update stats display safely
+                document.getElementById('totalBalance').textContent = data.stats.totalBalanceFormatted;
+                document.getElementById('totalIncome').textContent = data.stats.totalIncomeFormatted;
+                document.getElementById('totalExpense').textContent = data.stats.totalExpenseFormatted;
+                document.getElementById('transactionCount').textContent = data.stats.transactionCount;
+                document.getElementById('dataSpend').textContent = data.stats.dataAirtimeSpend || '₦0.00';
+                document.getElementById('mostExpensiveDate').textContent = data.stats.busiestDay;
+                document.getElementById('mostExpensiveAmount').textContent = data.stats.busiestDayAmount;
+                document.getElementById('weekdayPieChart').textContent = data.stats.weekdayBreakdown;
+                // console.log("TOP RECIPIENTS:", data.topRecipients);
+                // Render the weekday pie chart and compact insight
+                if (data.weekdayBreakdown) {
+                    renderWeekdayPieChart(data.weekdayBreakdown);
+                } else {
+                    console.warn("No weekdayBreakdown data from backend");
+                }
+
+                const recipientsList = document.getElementById('topRecipientsList');
+                recipientsList.innerHTML = '';
+
+                const topRecipients = data.topRecipients;
+
+                if (Array.isArray(topRecipients) && topRecipients.length > 0) {
+                    topRecipients.slice(0, 10).forEach((recipient, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between text-sm';
+
+                        li.innerHTML = `
+                            <span class="text-gray-700 truncate max-w-[65%]">
+                                ${index + 1}. ${recipient.name}
+                            </span>
+                            <span class="font-semibold text-red-600">
+                                ₦${recipient.amount.toLocaleString()}
+                            </span>
+                        `;
+
+                        recipientsList.appendChild(li);
+                    });
+                } else {
+                    recipientsList.innerHTML =
+                        '<li class="text-gray-400 text-sm">No recipient data</li>';
+                }
+
+                
+
+                // AFTER successful response
+                renderMonthlyBarChart(data.monthlyBreakdown);
+                renderWeekdayPieChart(data.weekdayBreakdown);
+
+                // ---------------- Weekday Pie Chart Renderer ----------------
+                function renderWeekdayPieChart(weekdayBreakdown) {
+                    const weekdayCtx = document.getElementById('weekdayPieChart').getContext('2d');
+
+                    // Destroy previous chart if it exists
+                    if (window.weekdayChart) {
+                        window.weekdayChart.destroy();
+                    }
+
+                    // Default to empty array if undefined
+                    const weekdayData = Array.isArray(weekdayBreakdown) ? weekdayBreakdown : [];
+
+                    if (!weekdayData.length) {
+                        // No data, show placeholder
+                        document.getElementById('mostActiveDay').textContent = 'N/A';
+                        document.getElementById('mostActiveDayCount').textContent = '0';
+                        document.getElementById('weekdayComparisonPct').textContent = '0%';
+                        return;
+                    }
+
+                    // Extract labels and values
+                    const dayLabels = weekdayData.map(d => d.day);
+                    const dayValues = weekdayData.map(d => d.total_spent);
+
+                    // Find most active day
+                    let maxValue = Math.max(...dayValues);
+                    let maxIndex = dayValues.indexOf(maxValue);
+                    const maxDay = dayLabels[maxIndex];
+
+                    // Total and average for comparison
+                    const totalValue = dayValues.reduce((a, b) => a + b, 0);
+                    const avgValue = totalValue / dayValues.length;
+                    const pct = avgValue > 0 ? ((maxValue - avgValue) / avgValue * 100).toFixed(1) : 0;
+
+                    // Update compact insight card
+                    document.getElementById('mostActiveDay').textContent = maxDay;
+                    document.getElementById('mostActiveDayCount').textContent = maxValue.toLocaleString();
+                    document.getElementById('weekdayComparisonPct').textContent = `${pct}%`;
+
+                    // Colors: max day = Opay green (#10B981), others = dark orange (#C2410C)
+                    const colors = dayValues.map(val => val === maxValue ? '#10B981' : '#C2410C');
+
+                    // Render Pie Chart
+                    window.weekdayChart = new Chart(weekdayCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: dayLabels,
+                            datasets: [{
+                                data: dayValues,
+                                backgroundColor: colors,
+                                borderColor: '#fff',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        boxWidth: 12,
+                                        padding: 10
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.raw;
+                                            return `${context.label}: ₦${value.toLocaleString()}`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+
+
+                addAIMessage(data.advice || '✅ Analysis complete! Ask me anything about your finances.');
+
+            } catch (err) {
+                hideTypingIndicator();
+                addAIMessage('❌ Server error. Please try again.');
+                console.error('Analysis error:', err);
+            }
+        });
+        // MONTHLY SPENDING TREND
+        let monthlyChart = null;
+
+        function renderMonthlyBarChart(monthlyData) {
+            if (!monthlyData || monthlyData.length === 0) return;
+
+            const labels = monthlyData.map(item => item.month);
+            const incomeData = monthlyData.map(item => item.credit_raw || 0);
+            const expenseData = monthlyData.map(item => item.debit_raw || 0);
+
+            const ctx = document.getElementById('monthlyBarChart').getContext('2d');
+
+            // Destroy old chart if it exists (important for re-upload)
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomeData,
+                            backgroundColor: '#15803d' // dark green
+                        },
+                        {
+                            label: 'Expenses',
+                            data: expenseData,
+                            backgroundColor: '#c2410c' // dark orange
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ₦${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₦' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+}
+        // ========================================
+        // GLOBAL VARIABLES
+        // ========================================
+        // ========================================
+        // CHAT FUNCTIONALITY
+        // ========================================
+
+        sendBtn.addEventListener('click', sendMessage);
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            if (!analysisData) {
+                addAIMessage('📊 Please upload and analyze a statement first.');
+                return;
+            }
+
+            addUserMessage(message);
+            chatInput.value = '';
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message,
+                        stats: analysisData.stats
+                    })
+                });
+                console.log('analysisData in chat:', analysisData);
+
+                const result = await response.json();
+                hideTypingIndicator();
+
+                addAIMessage(result.response || '🤖 Thinking...');
+
+            } catch (err) {
+                hideTypingIndicator();
+                addAIMessage('❌ Failed to get AI response.');
+                console.error('Chat error:', err);
+            }
+        }
+
+        // ========================================
+        // MESSAGE DISPLAY FUNCTIONS
+        // ========================================
+
+        function addUserMessage(message) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 items-start justify-end chat-message';
+            div.innerHTML = `
+                <div class="gradient-opay text-white rounded-2xl rounded-tr-none p-4 shadow-sm max-w-md">
+                    <p>${escapeHtml(message)}</p>
+                </div>
+                <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold">
+                    👤
+                </div>
+            `;
+            insertMessage(div);
+        }
+
+        function addAIMessage(message) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 items-start chat-message';
+            div.innerHTML = `
+                <div class="w-10 h-10 gradient-opay rounded-full flex items-center justify-center text-white font-bold">
+                    AI
+                </div>
+                <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm max-w-md border">
+                    <p>${escapeHtml(message)}</p>
+                </div>
+            `;
+            insertMessage(div);
+        }
+
+        // ========================================
+        // SAFE INSERT
+        // ========================================
+
+        function insertMessage(div) {
+            if (typingIndicator && typingIndicator.parentNode === chatMessages) {
+                chatMessages.insertBefore(div, typingIndicator);
+            } else {
+                chatMessages.appendChild(div);
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ========================================
+        // TYPING INDICATOR
+        // ========================================
+
+        function showTypingIndicator() {
+            if (!typingIndicator) return;
+            typingIndicator.style.display = 'flex';
+        }
+
+        function hideTypingIndicator() {
+            if (!typingIndicator) return;
+            typingIndicator.style.display = 'none';
+        }
+
+        // ========================================
+        // ESCAPE HTML
+        // ========================================
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+    </script>
+</body>
+</html>

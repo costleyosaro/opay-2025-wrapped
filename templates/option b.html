@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opay Statement Analyzer | AI-Powered Financial Insights</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .opay-green { background-color: #1E3A2C; }
+        .opay-green-light { background-color: #2a4d3c; }
+        .text-opay-green { color: #1E3A2C; }
+        .gradient-bg { background: linear-gradient(135deg, #1E3A2C 0%, #2a4d3c 100%); }
+        .card-shadow { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
+        .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12); }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .pulse-ring { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 58, 44, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(30, 58, 44, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 58, 44, 0); } }
+        .modal-content { animation: modalFadeIn 0.3s ease-out; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <!-- Opay Logo Placeholder - You can replace with actual Opay logo -->
+                <div class="w-10 h-10 rounded-lg opay-green flex items-center justify-center">
+                    <i class="fas fa-university text-white text-xl"></i>
+                </div>
+                <div class="flex flex-col">
+                    <h1 class="text-xl font-bold text-gray-800">Opay Statement</h1>
+                    <p class="text-sm text-opay-green font-medium">AI Analyzer</p>
+                </div>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#features" class="text-gray-600 hover:text-opay-green font-medium">Features</a>
+                <a href="#how-it-works" class="text-gray-600 hover:text-opay-green font-medium">How It Works</a>
+                <a href="#analysis" class="text-gray-600 hover:text-opay-green font-medium">Analysis</a>
+                <a href="#testimonials" class="text-gray-600 hover:text-opay-green font-medium">Testimonials</a>
+            </div>
+            <button class="opay-green text-white px-6 py-2 rounded-lg font-medium hover:opay-green-light transition">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-16 md:py-24">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">AI-Powered Opay Statement Analysis</h1>
+            <p class="text-xl md:text-2xl opacity-90 mb-10 max-w-3xl mx-auto">Upload your Opay bank statement and get intelligent insights, spending patterns, and personalized financial advice.</p>
+            
+            <!-- Upload Area - Option A -->
+            <div class="max-w-4xl mx-auto mb-16">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 card-shadow border border-white/20">
+                    <div class="text-center mb-8">
+                        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center pulse-ring">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold mb-3">Upload Your Opay Statement</h2>
+                        <p class="opacity-90">CSV, Excel, or PDF formats supported. Your data is processed securely.</p>
+                    </div>
+                    
+                    <div class="border-2 border-dashed border-white/30 rounded-xl p-10 text-center cursor-pointer hover:bg-white/5 transition mb-6" id="uploadArea">
+                        <i class="fas fa-file-invoice-dollar text-5xl text-white mb-4"></i>
+                        <p class="text-xl mb-2">Drag & drop your file here</p>
+                        <p class="opacity-90 mb-4">or click to browse files</p>
+                        <input type="file" id="fileUpload" class="hidden" accept=".csv,.xlsx,.xls,.pdf">
+                        <label for="fileUpload" class="inline-block bg-white text-opay-green px-8 py-3 rounded-lg font-medium hover:bg-gray-100 cursor-pointer transition">Select File</label>
+                        <p class="text-sm opacity-90 mt-4">File size limit: 10MB</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <div class="flex items-center bg-white/10 px-4 py-2 rounded-lg">
+                            <i class="fas fa-shield-alt text-white mr-2"></i>
+                            <span class="text-sm">Bank-level security</span>
+                        </div>
+                        <div class="flex items-center bg-white/10 px-4 py-2 rounded-lg">
+                            <i class="fas fa-bolt text-white mr-2"></i>
+                            <span class="text-sm">Instant analysis</span>
+                        </div>
+                        <div class="flex items-center bg-white/10 px-4 py-2 rounded-lg">
+                            <i class="fas fa-robot text-white mr-2"></i>
+                            <span class="text-sm">AI-powered insights</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-6 border-t border-white/20">
+                        <p class="opacity-90 mb-4">Want to see how it works without uploading?</p>
+                        <button id="tryDemo" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-medium transition border border-white/30">
+                            <i class="fas fa-play-circle mr-2"></i> Try Interactive Demo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">How Our Analysis Works</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <div class="bg-gray-50 rounded-xl p-8 card-shadow hover-lift fade-in">
+                    <div class="w-16 h-16 rounded-full gradient-bg flex items-center justify-center mb-6">
+                        <i class="fas fa-upload text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">1. Upload Statement</h3>
+                    <p class="text-gray-600">Securely upload your Opay bank statement in any common format. We support CSV, Excel, and PDF files.</p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-8 card-shadow hover-lift fade-in">
+                    <div class="w-16 h-16 rounded-full gradient-bg flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">2. AI Analysis</h3>
+                    <p class="text-gray-600">Our AI engine processes your transactions, categorizes spending, and identifies financial patterns.</p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-8 card-shadow hover-lift fade-in">
+                    <div class="w-16 h-16 rounded-full gradient-bg flex items-center justify-center mb-6">
+                        <i class="fas fa-lightbulb text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">3. Get Insights</h3>
+                    <p class="text-gray-600">Receive personalized advice, savings recommendations, and actionable insights to improve your finances.</p>
+                </div>
+            </div>
+            
+            <!-- Dashboard Preview -->
+            <div id="analysis" class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl overflow-hidden card-shadow">
+                <div class="p-6 border-b border-gray-700">
+                    <h3 class="text-xl font-bold text-white">Analysis Dashboard Preview</h3>
+                    <p class="text-gray-300">See what insights you'll get after uploading your statement</p>
+                </div>
+                
+                <div class="p-6 grid md:grid-cols-2 gap-8">
+                    <!-- Spending Categories -->
+                    <div class="bg-gray-800/50 rounded-xl p-6">
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-tags text-green-400 mr-2"></i> Spending Categories
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-gray-300 mb-1">
+                                    <span>Food & Dining</span>
+                                    <span>35%</span>
+                                </div>
+                                <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-500 rounded-full" style="width: 35%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-gray-300 mb-1">
+                                    <span>Transportation</span>
+                                    <span>22%</span>
+                                </div>
+                                <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: 22%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-gray-300 mb-1">
+                                    <span>Shopping</span>
+                                    <span>18%</span>
+                                </div>
+                                <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-purple-500 rounded-full" style="width: 18%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-gray-300 mb-1">
+                                    <span>Bills & Utilities</span>
+                                    <span>15%</span>
+                                </div>
+                                <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-yellow-500 rounded-full" style="width: 15%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Insights -->
+                    <div class="bg-gray-800/50 rounded-xl p-6">
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center">
+                            <i class="fas fa-robot text-green-400 mr-2"></i> AI Insights
+                        </h4>
+                        <div class="space-y-4">
+                            <div class="bg-gray-900/50 p-4 rounded-lg">
+                                <p class="text-gray-300 text-sm">"Your spending on food delivery increased by 42% this month. Consider meal planning to save approximately ₦15,000 monthly."</p>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg">
+                                <p class="text-gray-300 text-sm">"You have 3 recurring subscriptions totaling ₦7,500/month. Review if all are still necessary."</p>
+                            </div>
+                            <div class="bg-gray-900/50 p-4 rounded-lg">
+                                <p class="text-gray-300 text-sm">"Your savings rate is 12% of income. Aim for 20% by reducing discretionary spending."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Advice Section -->
+    <section id="how-it-works" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">Sample AI-Powered Financial Advice</h2>
+            <p class="text-gray-600 text-center mb-12 max-w-2xl mx-auto">See examples of personalized insights our AI generates from Opay statements</p>
+            
+            <div class="max-w-6xl mx-auto">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Spending Optimization Advice -->
+                    <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+                        <div class="p-6 border-b border-gray-100 gradient-bg">
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-chart-line mr-3"></i> Spending Optimization
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-6">
+                                <h4 class="font-bold text-gray-800 mb-2">Observation:</h4>
+                                <p class="text-gray-600 bg-green-50 p-4 rounded-lg">You spent ₦42,500 on food delivery this month, a 65% increase from last month.</p>
+                            </div>
+                            <div class="mb-6">
+                                <h4 class="font-bold text-gray-800 mb-2">AI Recommendation:</h4>
+                                <p class="text-gray-600 bg-blue-50 p-4 rounded-lg">Consider meal planning 3 days a week. Estimated monthly savings: ₦18,000. This could be redirected to your emergency fund.</p>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                <span>Generated on November 15, 2023</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Subscription Management Advice -->
+                    <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+                        <div class="p-6 border-b border-gray-100 gradient-bg">
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-calendar-check mr-3"></i> Subscription Management
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-6">
+                                <h4 class="font-bold text-gray-800 mb-2">Observation:</h4>
+                                <p class="text-gray-600 bg-green-50 p-4 rounded-lg">You have 7 active subscriptions totaling ₦14,800/month. Two haven't been used in 60+ days.</p>
+                            </div>
+                            <div class="mb-6">
+                                <h4 class="font-bold text-gray-800 mb-2">AI Recommendation:</h4>
+                                <p class="text-gray-600 bg-blue-50 p-4 rounded-lg">Cancel the unused subscriptions (₦5,500/month savings). Consider annual billing for frequently used services to save 15%.</p>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                <span>Generated on November 15, 2023</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <div class="inline-flex items-center bg-white px-6 py-4 rounded-xl card-shadow">
+                        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center mr-4">
+                            <i class="fas fa-robot text-white text-xl"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="font-medium text-gray-800">Our AI analyzes 50+ data points to provide personalized advice</p>
+                            <p class="text-sm text-gray-600">Including spending patterns, income timing, savings rate, and financial goals</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Trusted by Thousands of Opay Users</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-gray-50 rounded-xl p-6 card-shadow hover-lift">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
+                            AB
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold text-gray-800">Aisha B.</h4>
+                            <p class="text-gray-500 text-sm">Small Business Owner</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"This tool helped me identify wasteful subscriptions I'd forgotten about. Saved me ₦25,000/month!"</p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-6 card-shadow hover-lift">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
+                            CO
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold text-gray-800">Chinedu O.</h4>
+                            <p class="text-gray-500 text-sm">Freelancer</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"The AI advice was surprisingly accurate. Suggested better timing for my bill payments to optimize cash flow."</p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-6 card-shadow hover-lift">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
+                            FK
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-bold text-gray-800">Fatima K.</h4>
+                            <p class="text-gray-500 text-sm">Student</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"As a student, every naira counts. The spending analysis showed me where I was overspending on snacks."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 gradient-bg text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-6">Ready to Analyze Your Opay Statement?</h2>
+            <p class="text-xl opacity-90 mb-10 max-w-2xl mx-auto">Get started with our AI-powered analysis tool today. It's secure, fast, and completely free.</p>
+            
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 card-shadow border border-white/20">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="fas fa-file-upload text-3xl text-white"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Upload Your Statement Now</h3>
+                        <p class="opacity-90">Drag & drop your Opay statement or click to browse</p>
+                    </div>
+                    
+                    <div class="border-2 border-dashed border-white/30 rounded-xl p-8 text-center cursor-pointer hover:bg-white/5 transition mb-6">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-white mb-4"></i>
+                        <p class="text-lg mb-2">Drop your file here or</p>
+                        <input type="file" id="fileUploadCta" class="hidden" accept=".csv,.xlsx,.xls,.pdf">
+                        <label for="fileUploadCta" class="inline-block bg-white text-opay-green px-8 py-3 rounded-lg font-medium hover:bg-gray-100 cursor-pointer transition">Browse Files</label>
+                    </div>
+                    
+                    <p class="text-sm opacity-80 text-center">Your data is processed securely and never shared with third parties.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-8 md:mb-0">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 rounded-lg gradient-bg flex items-center justify-center">
+                            <i class="fas fa-university text-white text-xl"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <h2 class="text-2xl font-bold">Opay Statement</h2>
+                            <p class="text-sm text-gray-300">AI Analyzer</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 max-w-md">AI-powered financial insights for Opay users. Get smart about your spending and savings.</p>
+                </div>
+                
+                <div class="text-center md:text-right">
+                    <p class="text-gray-400 mb-4">Ready to analyze your finances?</p>
+                    <button class="gradient-bg text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition">Start Free Analysis</button>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                <p>© 2023 Opay Statement Analyzer. All rights reserved. | <a href="#" class="text-green-300 hover:text-white">Privacy Policy</a> | <a href="#" class="text-green-300 hover:text-white">Terms of Service</a></p>
+                <p class="mt-2 text-sm">This tool is not affiliated with Opay. It's an independent analysis tool.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for interactivity -->
+    <script>
+        // File upload simulation
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const fileName = this.files[0].name;
+                        const fileSize = (this.files[0].size / (1024*1024)).toFixed(2);
+                        
+                        // Show upload confirmation
+                        const uploadArea = document.getElementById('uploadArea');
+                        if (uploadArea) {
+                            uploadArea.innerHTML = `
+                                <i class="fas fa-check-circle text-5xl text-green-400 mb-4"></i>
+                                <p class="text-xl mb-2">File Uploaded Successfully!</p>
+                                <p class="opacity-90 mb-2">${fileName} (${fileSize} MB)</p>
+                                <p class="text-sm opacity-90 mb-4">Processing your statement...</p>
+                                <div class="h-2 bg-white/20 rounded-full overflow-hidden mx-auto max-w-xs">
+                                    <div class="h-full bg-white rounded-full animate-pulse" style="width: 70%"></div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Simulate processing
+                        setTimeout(() => {
+                            // Show success message
+                            const successMsg = document.createElement('div');
+                            successMsg.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg z-50';
+                            successMsg.innerHTML = `
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-medium">Analysis Complete!</p>
+                                        <p class="text-sm">Your Opay statement has been analyzed. Scroll down to see insights.</p>
+                                    </div>
+                                </div>
+                            `;
+                            document.body.appendChild(successMsg);
+                            
+                            // Update upload area to show completion
+                            if (uploadArea) {
+                                uploadArea.innerHTML = `
+                                    <i class="fas fa-chart-line text-5xl text-green-400 mb-4"></i>
+                                    <p class="text-xl mb-2">Analysis Complete!</p>
+                                    <p class="opacity-90 mb-4">Your financial insights are ready</p>
+                                    <button class="bg-white text-opay-green px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition">View Full Report</button>
+                                `;
+                            }
+                            
+                            // Remove success message after 5 seconds
+                            setTimeout(() => {
+                                successMsg.remove();
+                            }, 5000);
+                        }, 2000);
+                    }
+                });
+            });
+            
+            // Simulate drag and drop for upload area
+            const uploadArea = document.getElementById('uploadArea');
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('border-white', 'bg-white/10');
+                });
+                
+                uploadArea.addEventListener('dragleave', function(e) {
+                    this.classList.remove('border-white', 'bg-white/10');
+                });
+                
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('border-white', 'bg-white/10');
+                    
+                    // Simulate file upload
+                    const fileInput = document.getElementById('fileUpload');
+                    if (fileInput) {
+                        // Create a fake file object for demo
+                        const event = new Event('change');
+                        fileInput.dispatchEvent(event);
+                    }
+                });
+            }
+            
+            // Get Started button scroll to upload
+            document.querySelectorAll('button, [href="#"]').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (this.textContent.includes('Get Started') || this.textContent.includes('Start Free Analysis')) {
+                        e.preventDefault();
+                        document.querySelector('.gradient-bg').scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+            
+            // Try Demo button functionality
+            const tryDemoBtn = document.getElementById('tryDemo');
+            if (tryDemoBtn) {
+                tryDemoBtn.addEventListener('click', function() {
+                    // Create demo modal
+                    const demoModal = document.createElement('div');
+                    demoModal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4';
+                    demoModal.innerHTML = `
+                        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto modal-content">
+                            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                                <h3 class="text-xl font-bold text-gray-800">Interactive Demo: AI Analysis Preview</h3>
+                                <button id="closeDemo" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                <div class="mb-6">
+                                    <h4 class="font-bold text-gray-800 mb-3">Simulated Opay Statement Analysis</h4>
+                                    <p class="text-gray-600 mb-4">This demo shows how our AI analyzes a sample Opay statement. In reality, you'd upload your own statement for personalized insights.</p>
+                                    
+                                    <div class="bg-green-50 rounded-xl p-4 mb-6">
+                                        <div class="flex items-center mb-2">
+                                            <i class="fas fa-file-invoice-dollar text-opay-green mr-3"></i>
+                                            <h5 class="font-bold text-gray-800">Sample Statement Detected</h5>
+                                        </div>
+                                        <p class="text-gray-700">3 months of transaction data • 247 transactions • ₦428,500 total spending</p>
+                                    </div>
+                                    
+                                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                                        <div class="bg-gray-50 rounded-xl p-5">
+                                            <h5 class="font-bold text-gray-800 mb-3 flex items-center">
+                                                <i class="fas fa-tags text-opay-green mr-2"></i> Top Spending Categories
+                                            </h5>
+                                            <ul class="space-y-3">
+                                                <li class="flex justify-between">
+                                                    <span class="text-gray-700">Food & Dining</span>
+                                                    <span class="font-bold text-gray-800">₦152,400</span>
+                                                </li>
+                                                <li class="flex justify-between">
+                                                    <span class="text-gray-700">Transportation</span>
+                                                    <span class="font-bold text-gray-800">₦86,200</span>
+                                                </li>
+                                                <li class="flex justify-between">
+                                                    <span class="text-gray-700">Shopping</span>
+                                                    <span class="font-bold text-gray-800">₦72,500</span>
+                                                </li>
+                                                <li class="flex justify-between">
+                                                    <span class="text-gray-700">Bills & Utilities</span>
+                                                    <span class="font-bold text-gray-800">₦64,300</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div class="bg-gray-50 rounded-xl p-5">
+                                            <h5 class="font-bold text-gray-800 mb-3 flex items-center">
+                                                <i class="fas fa-lightbulb text-opay-green mr-2"></i> AI Insights Generated
+                                            </h5>
+                                            <div class="space-y-3">
+                                                <div class="bg-white p-3 rounded-lg">
+                                                    <p class="text-sm text-gray-700">"Your food spending increased 42% this month. Meal planning could save ₦25,000 monthly."</p>
+                                                </div>
+                                                <div class="bg-white p-3 rounded-lg">
+                                                    <p class="text-sm text-gray-700">"Consider consolidating ₦18,000 in subscription services you rarely use."</p>
+                                                </div>
+                                                <div class="bg-white p-3 rounded-lg">
+                                                    <p class="text-sm text-gray-700">"Your savings rate is 15%. Try increasing to 20% by reducing weekend spending."</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-5">
+                                        <h5 class="font-bold text-gray-800 mb-3 flex items-center">
+                                            <i class="fas fa-robot text-opay-green mr-2"></i> Personalized Recommendation
+                                        </h5>
+                                        <p class="text-gray-700 mb-3">Based on the analysis, here's your personalized financial advice:</p>
+                                        <div class="bg-white p-4 rounded-lg border-l-4 border-opay-green">
+                                            <p class="text-gray-800 font-medium">"Set up automatic transfers of ₦10,000 to savings every Friday when you receive your side gig payments. This could help you save ₦40,000 more per month without feeling the impact on daily spending."</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <p class="text-gray-600 mb-4">Ready to analyze your own Opay statement?</p>
+                                    <button class="gradient-bg text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition">
+                                        Upload Your Statement Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(demoModal);
+                    
+                    // Close modal functionality
+                    const closeBtn = demoModal.querySelector('#closeDemo');
+                    closeBtn.addEventListener('click', function() {
+                        document.body.removeChild(demoModal);
+                    });
+                    
+                    // Close when clicking outside modal
+                    demoModal.addEventListener('click', function(e) {
+                        if (e.target === demoModal) {
+                            document.body.removeChild(demoModal);
+                        }
+                    });
+                    
+                    // Upload button in modal
+                    const uploadBtn = demoModal.querySelector('button.gradient-bg');
+                    uploadBtn.addEventListener('click', function() {
+                        document.body.removeChild(demoModal);
+                        document.querySelector('.gradient-bg').scrollIntoView({ behavior: 'smooth' });
+                    });
+                });
+            }
+            
+            // Smooth scroll for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
