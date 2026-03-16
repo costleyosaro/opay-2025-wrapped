@@ -1,1117 +1,1260 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OPay Statement Analyzer - AI-Powered Financial Intelligence</title>
+    <title>OPay Wrapped — Your Financial Year in Review</title>
+    <meta name="description" content="Upload your OPay statement and get AI-powered analysis of your entire year's financial activity.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* ========================================
-           FONTS & BASE STYLES
-        ======================================== */
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        :root {
+            --g900:#022B13; --g800:#05652D; --g700:#0a8f44;
+            --g600:#0daa53; --g500:#10B981; --g400:#34D399;
+            --g300:#6EE7B7; --g200:#A7F3D0; --g100:#D1FAE5; --g50:#ECFDF5;
         }
-        
-        /* ========================================
-           OPAY BRAND COLORS
-        ======================================== */
-        .opay-green {
-            background-color: #05652D;
+        *{ font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+
+        .text-opay   { color: var(--g800); }
+        .bg-opay     { background: var(--g800); }
+        .border-opay { border-color: var(--g800); }
+        .gradient-opay { background: linear-gradient(135deg, var(--g800) 0%, var(--g700) 100%); }
+
+        /* NAV */
+        .nav-glass {
+            background: rgba(5,101,45,.97);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            transition: box-shadow .3s;
         }
-        .opay-green-light {
-            background-color: #0a8f44;
+        .nav-glass.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,.18); }
+
+        /* HERO */
+        .hero-bg {
+            background: linear-gradient(-45deg, #022B13, #05652D, #0a8f44, #05652D);
+            background-size: 400% 400%;
+            animation: heroShift 14s ease infinite;
+            position: relative; overflow: hidden;
         }
-        .opay-green-lighter {
-            background-color: #e8f5e9;
+        @keyframes heroShift {
+            0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
         }
-        .text-opay-green {
-            color: #05652D;
+        .hero-dots {
+            background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
+            background-size: 32px 32px;
         }
-        .border-opay-green {
-            border-color: #05652D;
+        .fshape { position:absolute; border-radius:50%; opacity:.06; pointer-events:none; }
+        .fs1 { width:340px;height:340px;background:#fff;top:-60px;right:-40px; animation:f1 9s ease-in-out infinite; }
+        .fs2 { width:220px;height:220px;background:#fff;bottom:-40px;left:8%;   animation:f2 11s ease-in-out infinite; }
+        .fs3 { width:160px;height:160px;border:2px solid #fff;top:35%;left:-30px;animation:f3 13s ease-in-out infinite; }
+        @keyframes f1{0%,100%{transform:translate(0,0) rotate(0)} 50%{transform:translate(-25px,18px) rotate(8deg)}}
+        @keyframes f2{0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-25px)}}
+        @keyframes f3{0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(12px,12px) scale(1.08)}}
+        @media(max-width:768px){ .fshape{display:none} }
+
+        /* SCROLL REVEAL */
+        .reveal {
+            opacity:0; transform:translateY(36px);
+            transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1);
         }
-        
-        /* ========================================
-           GRADIENTS
-        ======================================== */
-        .gradient-opay {
-            background: linear-gradient(135deg, #05652D 0%, #0a8f44 100%);
+        .reveal.active { opacity:1; transform:translateY(0); }
+        .rd1{transition-delay:.1s} .rd2{transition-delay:.2s}
+        .rd3{transition-delay:.3s} .rd4{transition-delay:.4s}
+        .rd5{transition-delay:.5s} .rd6{transition-delay:.6s}
+        .rd7{transition-delay:.7s} .rd8{transition-delay:.8s}
+
+        /* CARDS */
+        .card-m {
+            background:#fff; border:1px solid #e2e8f0; border-radius:18px;
+            transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s cubic-bezier(.16,1,.3,1), border-color .4s;
         }
-        .hero-gradient {
-            background: linear-gradient(135deg, #05652D 0%, #0a8f44 50%, #05652D 100%);
+        .card-m:hover {
+            transform:translateY(-6px);
+            box-shadow:0 22px 44px -12px rgba(5,101,45,.14);
+            border-color: var(--g200);
         }
-        
-        /* ========================================
-           HOVER EFFECTS
-        ======================================== */
-        .card-hover {
-            transition: all 0.3s ease;
+
+        .stat-m {
+            position:relative; overflow:hidden; border-radius:16px;
+            transition: transform .3s, box-shadow .3s;
         }
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(5, 101, 45, 0.2);
+        .stat-m::before {
+            content:''; position:absolute; top:0;left:0;right:0; height:4px;
+            background:linear-gradient(90deg,var(--g800),var(--g500));
+            border-radius:16px 16px 0 0;
         }
-        
-        .upload-area {
-            transition: all 0.3s ease;
+        .stat-m:hover { transform:translateY(-4px); box-shadow:0 14px 28px -8px rgba(0,0,0,.1); }
+
+        /* UPLOAD ZONE */
+        .upload-zone {
+            border:2.5px dashed #cbd5e1; border-radius:20px; transition: all .3s ease;
         }
-        .upload-area:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 30px rgba(5, 101, 45, 0.15);
+        .upload-zone:hover, .upload-zone.drag-active {
+            border-color:var(--g500); background:var(--g50);
+            box-shadow:0 0 0 5px rgba(16,185,129,.08);
         }
-        
-        .feature-icon {
-            transition: all 0.3s ease;
+
+        /* BUTTONS */
+        .btn-p {
+            background:linear-gradient(135deg,var(--g800),var(--g700));
+            color:#fff; font-weight:600; border-radius:12px; transition: all .3s ease;
         }
-        .feature-icon:hover {
-            transform: rotate(10deg) scale(1.1);
+        .btn-p:hover { box-shadow:0 8px 24px -4px rgba(5,101,45,.35); transform:translateY(-1px); }
+        .btn-p:active { transform:translateY(0); }
+        .btn-p:disabled { opacity:.6; cursor:not-allowed; transform:none!important; box-shadow:none!important; }
+
+        /* CHAT */
+        .chat-wrap {
+            border-radius:20px; overflow:hidden;
+            box-shadow:0 25px 60px -15px rgba(0,0,0,.18); border:1px solid #e2e8f0;
         }
-        
-        .stat-card {
-            transition: all 0.3s ease;
+        .bubble-ai { background:#fff; border:1px solid #e2e8f0; border-radius:18px 18px 18px 4px; }
+        .bubble-user {
+            background:linear-gradient(135deg,var(--g800),var(--g700));
+            color:#fff; border-radius:18px 18px 4px 18px;
         }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        @keyframes msgIn { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .msg-anim { animation: msgIn .3s ease-out; }
+
+        #chatMessages::-webkit-scrollbar { width:5px }
+        #chatMessages::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px }
+
+        .tdot { width:7px;height:7px;border-radius:50%;background:#94a3b8; animation:tBounce 1.4s infinite; }
+        .tdot:nth-child(2){animation-delay:.2s} .tdot:nth-child(3){animation-delay:.4s}
+        @keyframes tBounce { 0%,60%,100%{transform:translateY(0);opacity:.35} 30%{transform:translateY(-5px);opacity:1} }
+
+        .chip {
+            white-space:nowrap; padding:7px 16px; border-radius:100px;
+            font-size:13px; font-weight:500;
+            border:1px solid #e2e8f0; background:#fff; color:#334155;
+            cursor:pointer; transition:all .2s;
         }
-        
-        /* ========================================
-           ANIMATIONS
-        ======================================== */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .chip:hover { border-color:var(--g500); background:var(--g50); color:var(--g800); }
+
+        .pulse-dot { animation: pDot 2s ease-in-out infinite; }
+        @keyframes pDot { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+        .progress-track { height:4px; background:#e2e8f0; border-radius:2px; overflow:hidden; }
+        .progress-fill {
+            height:100%; border-radius:2px;
+            background:linear-gradient(90deg,var(--g800),var(--g500));
+            width:0%; transition:width .4s ease;
         }
-        
-        .animate-fadeInUp {
-            animation: fadeInUp 0.6s ease-out forwards;
+
+        .scroll-slim::-webkit-scrollbar{width:4px}
+        .scroll-slim::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
+
+        .feat-icon { transition:transform .3s ease; }
+        .feat-icon:hover { transform:rotate(8deg) scale(1.1); }
+
+        /* MOBILE NAV */
+        .mob-menu { max-height:0; overflow:hidden; transition:max-height .35s ease; }
+        .mob-menu.open { max-height:300px; }
+
+        /* ERROR TOAST */
+        .error-toast {
+            position:fixed; top:90px; left:50%; transform:translateX(-50%) translateY(-20px);
+            z-index:9999; opacity:0; pointer-events:none;
+            transition: opacity .4s ease, transform .4s ease; max-width:90vw;
         }
-        
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
+        .error-toast.visible { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+
+        /* =============================================
+           ACCORDION / COLLAPSIBLE SECTIONS
+        ============================================= */
+        .accordion-trigger {
+            cursor: pointer;
+            user-select: none;
+            transition: all .2s ease;
         }
-        
-        .pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .accordion-trigger:hover {
+            opacity: .85;
         }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .accordion-chevron {
+            transition: transform .4s cubic-bezier(.16,1,.3,1);
+            flex-shrink: 0;
         }
-        
-        .chat-message {
-            animation: slideIn 0.3s ease-out;
+        .accordion-trigger[aria-expanded="true"] .accordion-chevron {
+            transform: rotate(180deg);
         }
-        
-        @keyframes typing {
-            0%, 60%, 100% {
-                opacity: 0.3;
-            }
-            30% {
-                opacity: 1;
-            }
+
+        .accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .5s cubic-bezier(.16,1,.3,1),
+                        opacity .4s ease,
+                        padding .4s ease;
+            opacity: 0;
         }
-        
-        .dot {
-            animation: typing 1.4s infinite;
+        .accordion-body.open {
+            opacity: 1;
         }
-        .dot:nth-child(2) {
-            animation-delay: 0.2s;
+
+        /* count badge on collapsed header */
+        .section-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 12px; border-radius: 100px;
+            font-size: 11px; font-weight: 700;
+            background: var(--g50); color: var(--g800);
+            border: 1px solid var(--g200);
         }
-        .dot:nth-child(3) {
-            animation-delay: 0.4s;
+
+        /* STEP CARDS */
+        .step-card { position: relative; padding-left: 3.5rem; }
+        .step-card .step-num {
+            position:absolute; left:0; top:0;
+            width:2.5rem; height:2.5rem; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-weight:800; font-size:.875rem; color:#fff;
+            background:linear-gradient(135deg,var(--g800),var(--g700));
+            box-shadow:0 4px 12px rgba(5,101,45,.25);
         }
-        
-        /* ========================================
-           CHAT STYLES
-        ======================================== */
-        #chatMessages {
-            scroll-behavior: smooth;
+        .step-connector {
+            position:absolute; left:calc(1.25rem - 1px); top:2.5rem;
+            width:2px; bottom:-1rem; background:var(--g200);
         }
-        
-        .typing-indicator {
-            display: none;
-        }
-        .typing-indicator.active {
-            display: flex;
-        }
-        /* ========================================
-           DARK MODE STYLES
-        ======================================== */
-        body.dark-mode {
-            background-color: #121212;
-            color: #ffffff;
-        }
-        body.dark-mode .bg-white {
-            background-color: #1b1b1b !important;
-        }
-        body.dark-mode .text-gray-900 {
-            color: #ffffff !important;
-        }
-        body.dark-mode .text-gray-600 {
-            color: #cccccc !important;
-        }
-        body.dark-mode .border-gray-200 {
-            border-color: #333333 !important;
-        }
-        body.dark-mode .border-gray-100 {
-            border-color: #444444 !important;
+        .step-card:last-child .step-connector { display:none; }
+
+        .highlight-badge {
+            display:inline-flex; align-items:center; gap:4px;
+            padding:2px 10px; border-radius:100px; font-size:11px; font-weight:700;
         }
     </style>
 </head>
-<body class="bg-white">
-    <!-- ========================================
-         NAVIGATION
-    ======================================== -->
-    <nav class="opay-green shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <!-- Logo Section -->
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
-                            <img src="/static/images/opay-logo.png" alt="OPay Logo" class="w-4/5 h-auto">
-                        </div>
-                        <div>
-                            <h1 class="text-white text-2xl font-bold">OPay Statement Analyzer</h1>
-                            <p class="text-white/80 text-xs">AI-Powered Financial Intelligence</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Navigation Links -->
-                <div class="hidden md:flex items-center gap-6">
-                    <a href="#features" class="text-white hover:text-white/80 transition-colors font-medium">Features</a>
-                    <a href="#how-it-works" class="text-white hover:text-white/80 transition-colors font-medium">How It Works</a>
-                    <a href="#upload" class="bg-white text-opay-green px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-100 transition-all shadow-md">Get Started</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-    <!-- ========================================
-         HERO SECTION
-    ======================================== -->
-    <section class="hero-gradient text-white py-20 px-4">
-        <div class="max-w-7xl mx-auto text-center">
-            <div class="animate-fadeInUp">
-                <h2 class="text-5xl md:text-6xl font-bold mb-6">
-                    Unlock Your Financial Insights
-                </h2>
-                <p class="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
-                    Upload your OPay bank statement and get AI-powered analysis, personalized advice, and actionable insights in seconds.
-                </p>
-                
-                <!-- CTA Buttons -->
-                <div class="flex gap-4 justify-center flex-wrap">
-                    <button onclick="document.getElementById('upload').scrollIntoView({behavior: 'smooth'})" 
-                            class="bg-white text-opay-green px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all shadow-xl">
-                        📊 Analyze My Statement
-                    </button>
-                    <button onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})" 
-                            class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/10 transition-all">
-                        ▶️ See How It Works
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Stats Banner -->
-            <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
-                    <div class="text-4xl font-bold mb-2">10,000+</div>
-                    <div class="text-white/90">Statements Analyzed</div>
-                </div>
-                <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
-                    <div class="text-4xl font-bold mb-2">98%</div>
-                    <div class="text-white/90">Accuracy Rate</div>
-                </div>
-                <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
-                    <div class="text-4xl font-bold mb-2">24/7</div>
-                    <div class="text-white/90">AI Assistant</div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- ========================================
-         FEATURES SECTION
-    ======================================== -->
-    <section id="features" class="py-20 px-4 bg-gray-50">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-16">
-                <h3 class="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h3>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Everything you need to understand and improve your finances</p>
-            </div>
-            
-            <!-- Feature Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <!-- AI Analysis -->
-                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
-                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
-                        🤖
-                    </div>
-                    <h4 class="text-xl font-bold text-gray-900 mb-3">AI Analysis</h4>
-                    <p class="text-gray-600">Advanced AI powered by OpenAI GPT-4 analyzes your spending patterns and financial behavior</p>
-                </div>
-                
-                <!-- Smart Insights -->
-                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
-                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
-                        💡
-                    </div>
-                    <h4 class="text-xl font-bold text-gray-900 mb-3">Smart Insights</h4>
-                    <p class="text-gray-600">Get personalized recommendations to optimize your spending and increase savings</p>
-                </div>
-                
-                <!-- Visual Reports -->
-                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
-                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
-                        📊
-                    </div>
-                    <h4 class="text-xl font-bold text-gray-900 mb-3">Visual Reports</h4>
-                    <p class="text-gray-600">Beautiful charts and graphs that make your financial data easy to understand</p>
-                </div>
-                
-                <!-- 100% Secure -->
-                <div class="card-hover bg-white rounded-2xl p-8 text-center border border-gray-200 shadow-sm">
-                    <div class="feature-icon w-16 h-16 gradient-opay rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
-                        🔒
-                    </div>
-                    <h4 class="text-xl font-bold text-gray-900 mb-3">100% Secure</h4>
-                    <p class="text-gray-600">Bank-level encryption ensures your financial data is always protected and private</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- ========================================
-         HOW IT WORKS SECTION
-    ======================================== -->
-    <section id="how-it-works" class="py-20 px-4 bg-white">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-16">
-                <h3 class="text-4xl font-bold text-gray-900 mb-4">How It Works</h3>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Get insights in 3 simple steps</p>
-            </div>
-            
-            <!-- Steps Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <!-- Step 1 -->
-                <div class="text-center">
-                    <div class="w-20 h-20 gradient-opay rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-xl">
-                        1
-                    </div>
-                    <h4 class="text-2xl font-bold text-gray-900 mb-4">Upload Statement</h4>
-                    <p class="text-gray-600 text-lg">Upload your OPay bank statement in PDF, CSV, or Excel format. Drag and drop or click to browse.</p>
-                </div>
-                
-                <!-- Step 2 -->
-                <div class="text-center">
-                    <div class="w-20 h-20 gradient-opay rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-xl">
-                        2
-                    </div>
-                    <h4 class="text-2xl font-bold text-gray-900 mb-4">AI Processing</h4>
-                    <p class="text-gray-600 text-lg">Our AI analyzes your transactions, identifies patterns, and generates comprehensive insights.</p>
-                </div>
-                
-                <!-- Step 3 -->
-                <div class="text-center">
-                    <div class="w-20 h-20 gradient-opay rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-xl">
-                        3
-                    </div>
-                    <h4 class="text-2xl font-bold text-gray-900 mb-4">Get Advice</h4>
-                    <p class="text-gray-600 text-lg">Receive personalized financial advice and actionable recommendations to improve your finances.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- ========================================
-         UPLOAD & CHAT SECTION
-    ======================================== -->
-    <section id="upload" class="py-20 px-4 bg-gray-50">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                
-                <!-- LEFT COLUMN: Upload Area & Stats -->
-                <div>
-                    <h3 class="text-3xl font-bold text-gray-900 mb-6">Upload Your Statement</h3>
-                    
-                    <!-- Upload Area -->
-                    <div id="uploadArea" class="upload-area bg-white border-3 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer mb-6">
-                        <input type="file" id="fileInput" accept=".pdf,.csv,.xlsx,.xls" class="hidden">
-                        <svg class="w-20 h-20 mx-auto text-opay-green mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                        </svg>
-                        <h4 class="text-xl font-bold text-gray-900 mb-2">Drop your file here or click to browse</h4>
-                        <p class="text-gray-600 mb-4">Supports CSV, XLSX (Max 10MB)</p>
-                        <button type="button" id="uploadBtn" class="gradient-opay text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all">
-                            Choose File
-                        </button>
-                    </div>
-                    
-                    <!-- File Info (Hidden Initially) -->
-                    <div id="fileInfo" class="hidden bg-green-50 border-2 border-opay-green rounded-xl p-6 mb-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 gradient-opay rounded-lg flex items-center justify-center text-white text-2xl">
-                                    📄
-                                </div>
-                                <div>
-                                    <p
-                                        id="fileName"
-                                        class="font-bold text-gray-900 text-lg
-                                                max-w-[14rem] sm:max-w-none
-                                                truncate sm:whitespace-normal sm:break-words"
-                                        title=""
-                                    ></p>
 
-                                    <p id="fileSize" class="text-sm text-gray-600"></p>
+<body class="bg-[#f8fafc] text-gray-900 antialiased">
+
+<!-- ERROR TOAST -->
+<div id="errorToast" class="error-toast">
+    <div class="bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-start gap-4 max-w-lg">
+        <div class="flex-shrink-0 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl mt-0.5">⚠️</div>
+        <div class="flex-1">
+            <p class="font-bold text-base mb-1">Unsupported File Format</p>
+            <p id="errorToastMsg" class="text-sm text-white/90 leading-relaxed">
+                Please upload your statement in <strong>Excel (.xlsx)</strong> or <strong>CSV</strong> format.
+            </p>
+            <a href="#download-guide" id="errorToastLink"
+               class="inline-block mt-2 text-xs font-bold text-white underline underline-offset-2 hover:text-white/80 transition-colors">
+                📖 Learn how to download in Excel format →
+            </a>
+        </div>
+        <button id="errorToastClose" class="text-white/60 hover:text-white transition-colors flex-shrink-0 mt-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+
+<!-- NAVIGATION -->
+<nav id="mainNav" class="nav-glass fixed top-0 inset-x-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-[72px]">
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-md
+                            group-hover:shadow-lg transition-shadow overflow-hidden">
+                    <img src="/static/images/opay-logo.png" alt="OPay" class="w-8 h-8 object-contain"
+                         onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\'text-lg font-black text-[#05652D]\'>O</span>'">
+                </div>
+                <div class="hidden sm:block">
+                    <h1 class="text-white text-lg font-bold leading-tight tracking-tight">OPay Wrapped</h1>
+                    <p class="text-white/60 text-[11px] font-medium">Your Financial Year in Review</p>
+                </div>
+            </a>
+
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features"       class="text-white/80 hover:text-white text-sm font-medium transition-colors">Features</a>
+                <a href="#how-it-works"    class="text-white/80 hover:text-white text-sm font-medium transition-colors">How It Works</a>
+                <a href="#download-guide"  class="text-white/80 hover:text-white text-sm font-medium transition-colors">Download Guide</a>
+                <a href="#upload"
+                   class="bg-white text-[#05652D] px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50 hover:shadow-lg transition-all">
+                    Get Started →
+                </a>
+            </div>
+
+            <button id="hamburgerBtn" class="md:hidden text-white p-2" aria-label="Menu">
+                <svg id="hamburgerIcon" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+                <svg id="closeIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div id="mobileMenu" class="mob-menu md:hidden">
+            <div class="pb-5 pt-2 flex flex-col gap-3">
+                <a href="#features"       class="text-white/80 hover:text-white text-sm font-medium py-2">Features</a>
+                <a href="#how-it-works"    class="text-white/80 hover:text-white text-sm font-medium py-2">How It Works</a>
+                <a href="#download-guide"  class="text-white/80 hover:text-white text-sm font-medium py-2">Download Guide</a>
+                <a href="#upload" class="bg-white text-[#05652D] px-5 py-2.5 rounded-xl text-sm font-bold text-center mt-1">Get Started →</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+<!-- HERO -->
+<section class="hero-bg text-white pt-36 pb-24 px-4 relative">
+    <div class="absolute inset-0 hero-dots"></div>
+    <div class="fshape fs1"></div>
+    <div class="fshape fs2"></div>
+    <div class="fshape fs3"></div>
+
+    <div class="max-w-5xl mx-auto text-center relative z-10">
+        <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20
+                    rounded-full px-5 py-2 text-sm font-medium mb-8 backdrop-blur-sm">
+            <span class="w-2 h-2 bg-[#34D399] rounded-full pulse-dot"></span>
+            AI-Powered Financial Analysis
+        </div>
+
+        <h2 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.08] mb-6 tracking-tight">
+            Your Financial Year,<br>
+            <span class="bg-gradient-to-r from-[#34D399] to-[#A7F3D0] bg-clip-text text-transparent">Unwrapped.</span>
+        </h2>
+
+        <p class="text-lg sm:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+            Upload your OPay bank statement and get a complete breakdown
+            of your spending, savings, and habits — powered&nbsp;by&nbsp;AI.
+        </p>
+
+        <div class="flex gap-4 justify-center flex-wrap">
+            <button onclick="document.getElementById('upload').scrollIntoView({behavior:'smooth'})"
+                    class="bg-white text-[#05652D] px-8 py-4 rounded-2xl font-bold text-base
+                           hover:bg-gray-50 hover:shadow-2xl transition-all shadow-xl flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                </svg>
+                Analyze My Statement
+            </button>
+            <button onclick="document.getElementById('download-guide').scrollIntoView({behavior:'smooth'})"
+                    class="border-2 border-white/40 text-white px-8 py-4 rounded-2xl font-bold text-base
+                           hover:bg-white/10 hover:border-white/60 transition-all flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>
+                </svg>
+                How to Download Statement
+            </button>
+        </div>
+
+        <div class="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <div class="bg-white/[.08] backdrop-blur-sm rounded-2xl p-6 border border-white/[.12]">
+                <div class="text-3xl sm:text-4xl font-extrabold mb-1">10K+</div>
+                <div class="text-white/60 text-sm font-medium">Statements Analyzed</div>
+            </div>
+            <div class="bg-white/[.08] backdrop-blur-sm rounded-2xl p-6 border border-white/[.12]">
+                <div class="text-3xl sm:text-4xl font-extrabold mb-1">98%</div>
+                <div class="text-white/60 text-sm font-medium">Accuracy Rate</div>
+            </div>
+            <div class="bg-white/[.08] backdrop-blur-sm rounded-2xl p-6 border border-white/[.12]">
+                <div class="text-3xl sm:text-4xl font-extrabold mb-1">24/7</div>
+                <div class="text-white/60 text-sm font-medium">AI Assistant</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================================================
+     ACCORDION SECTION: FEATURES
+============================================================ -->
+<section id="features" class="bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Accordion Header -->
+        <button class="accordion-trigger w-full flex items-center justify-between py-7 sm:py-8"
+                aria-expanded="false" data-target="featuresBody">
+            <div class="flex items-center gap-4">
+                <div class="w-11 h-11 gradient-opay rounded-xl flex items-center justify-center text-white text-lg shadow-md">
+                    ✨
+                </div>
+                <div class="text-left">
+                    <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900">Powerful Features</h3>
+                    <p class="text-gray-400 text-sm mt-0.5 hidden sm:block">Everything you need to understand your money</p>
+                </div>
+                <span class="section-badge ml-2 hidden sm:inline-flex">4 features</span>
+            </div>
+            <svg class="accordion-chevron w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+
+        <!-- Accordion Body -->
+        <div id="featuresBody" class="accordion-body">
+            <div class="pb-12 pt-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="card-m p-8 text-center">
+                        <div class="feat-icon w-14 h-14 gradient-opay rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-5 shadow-lg">🤖</div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-2">AI Analysis</h4>
+                        <p class="text-gray-500 text-sm leading-relaxed">GPT-powered engine analyzes spending patterns, habits, and behavior in seconds.</p>
+                    </div>
+                    <div class="card-m p-8 text-center">
+                        <div class="feat-icon w-14 h-14 gradient-opay rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-5 shadow-lg">💡</div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-2">Smart Insights</h4>
+                        <p class="text-gray-500 text-sm leading-relaxed">Personalized recommendations to optimize spending and grow savings.</p>
+                    </div>
+                    <div class="card-m p-8 text-center">
+                        <div class="feat-icon w-14 h-14 gradient-opay rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-5 shadow-lg">📊</div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-2">Visual Reports</h4>
+                        <p class="text-gray-500 text-sm leading-relaxed">Beautiful interactive charts that make financial data effortless to read.</p>
+                    </div>
+                    <div class="card-m p-8 text-center">
+                        <div class="feat-icon w-14 h-14 gradient-opay rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-5 shadow-lg">🔒</div>
+                        <h4 class="text-lg font-bold text-gray-900 mb-2">100% Secure</h4>
+                        <p class="text-gray-500 text-sm leading-relaxed">Bank-level encryption. Your statement is never stored permanently.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ============================================================
+     ACCORDION SECTION: HOW IT WORKS
+============================================================ -->
+<section id="how-it-works" class="bg-[#f8fafc] border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <button class="accordion-trigger w-full flex items-center justify-between py-7 sm:py-8"
+                aria-expanded="false" data-target="howBody">
+            <div class="flex items-center gap-4">
+                <div class="w-11 h-11 gradient-opay rounded-xl flex items-center justify-center text-white text-lg shadow-md">
+                    🚀
+                </div>
+                <div class="text-left">
+                    <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900">How It Works</h3>
+                    <p class="text-gray-400 text-sm mt-0.5 hidden sm:block">Insights in 3 simple steps</p>
+                </div>
+                <span class="section-badge ml-2 hidden sm:inline-flex">3 steps</span>
+            </div>
+            <svg class="accordion-chevron w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+
+        <div id="howBody" class="accordion-body">
+            <div class="pb-12 pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto relative">
+                    <div class="hidden md:block absolute top-[44px] left-[calc(16.67%+36px)] right-[calc(16.67%+36px)] h-[2px]
+                                bg-gradient-to-r from-[#34D399] via-[#A7F3D0] to-[#34D399] z-0"></div>
+                    <div class="text-center relative z-10">
+                        <div class="w-[72px] h-[72px] gradient-opay rounded-full flex items-center justify-center
+                                    text-white text-2xl font-extrabold mx-auto mb-5 shadow-xl ring-4 ring-white">1</div>
+                        <h4 class="text-xl font-bold text-gray-900 mb-3">Upload Statement</h4>
+                        <p class="text-gray-500 leading-relaxed">Drag & drop your OPay statement (CSV or Excel). We handle the rest.</p>
+                    </div>
+                    <div class="text-center relative z-10">
+                        <div class="w-[72px] h-[72px] gradient-opay rounded-full flex items-center justify-center
+                                    text-white text-2xl font-extrabold mx-auto mb-5 shadow-xl ring-4 ring-white">2</div>
+                        <h4 class="text-xl font-bold text-gray-900 mb-3">AI Processing</h4>
+                        <p class="text-gray-500 leading-relaxed">Our AI scans every transaction, categorizes spending, and uncovers patterns.</p>
+                    </div>
+                    <div class="text-center relative z-10">
+                        <div class="w-[72px] h-[72px] gradient-opay rounded-full flex items-center justify-center
+                                    text-white text-2xl font-extrabold mx-auto mb-5 shadow-xl ring-4 ring-white">3</div>
+                        <h4 class="text-xl font-bold text-gray-900 mb-3">Get Your Wrap-Up</h4>
+                        <p class="text-gray-500 leading-relaxed">Receive a personalised report with actionable advice & charts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ============================================================
+     ACCORDION SECTION: DOWNLOAD GUIDE
+============================================================ -->
+<section id="download-guide" class="bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <button class="accordion-trigger w-full flex items-center justify-between py-7 sm:py-8"
+                aria-expanded="false" data-target="guideBody">
+            <div class="flex items-center gap-4">
+                <div class="w-11 h-11 gradient-opay rounded-xl flex items-center justify-center text-white text-lg shadow-md">
+                    📖
+                </div>
+                <div class="text-left">
+                    <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900">Download Guide</h3>
+                    <p class="text-gray-400 text-sm mt-0.5 hidden sm:block">How to get your OPay statement in Excel/CSV</p>
+                </div>
+                <span class="section-badge ml-2 hidden sm:inline-flex">8 steps</span>
+            </div>
+            <svg class="accordion-chevron w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+
+        <div id="guideBody" class="accordion-body">
+            <div class="pb-12 pt-2 max-w-4xl mx-auto">
+
+                <!-- Format Warning -->
+                <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 mb-10 flex items-start gap-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-2xl">⚠️</div>
+                    <div>
+                        <p class="font-bold text-amber-900 text-base mb-1">Important: File Format</p>
+                        <p class="text-amber-800 text-sm leading-relaxed">
+                            OPay Wrapped only accepts <strong>Excel (.xlsx)</strong> or <strong>CSV</strong> files.
+                            <strong>PDF files are not supported.</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Steps -->
+                <div class="bg-[#f8fafc] rounded-3xl border border-gray-100 p-8 sm:p-10">
+                    <div class="space-y-8">
+
+                        <div class="step-card relative">
+                            <div class="step-connector"></div>
+                            <div class="step-num">1</div>
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900 mb-1">Open OPay App</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed">Open your OPay app and go to the <strong>home/dashboard</strong> screen.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-card relative">
+                            <div class="step-connector"></div>
+                            <div class="step-num">2</div>
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900 mb-1">Go to Transaction History</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed">Tap on <strong>"Transaction History"</strong> to see all your past transactions.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-card relative">
+                            <div class="step-connector"></div>
+                            <div class="step-num">3</div>
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900 mb-1">Tap "Download"</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed">At the <strong>top right corner</strong>, tap the <strong>"Download"</strong> button.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-card relative">
+                            <div class="step-connector"></div>
+                            <div class="step-num">4</div>
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900 mb-1">Select "Custom" Time Frame</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed">Tap the <strong>"Custom"</strong> tab so you can set it to a <strong>full year</strong>.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-card relative">
+                            <div class="step-connector"></div>
+                            <div class="step-num">5</div>
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900 mb-1">Set Start &amp; End Date</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed">
+                                    Tap <strong>"Start Date"</strong> → set to <strong>Jan 1, 2024</strong>.
+                                    Then <strong>"End Date"</strong> → set to <strong>Dec 31, 2024</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="step-card relative">
+                            <div class="step-connector"></div>
+                            <div class="step-num" style="background:linear-gradient(135deg,#dc2626,#ef4444)">6</div>
+                            <div>
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <h4 class="text-lg font-bold text-gray-900">Choose File Type</h4>
+                                    <span class="highlight-badge bg-red-100 text-red-700">⚡ CRITICAL</span>
+                                </div>
+                                <p class="text-gray-500 text-sm leading-relaxed">
+                                    Tap <strong>"File Type"</strong> and select
+                                    <strong class="text-[#05652D]">Excel</strong> or
+                                    <strong class="text-[#05652D]">CSV</strong>.
+                                </p>
+                                <div class="mt-3 flex gap-3 flex-wrap">
+                                    <span class="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-800 px-3 py-1.5 rounded-lg text-xs font-bold">✅ Excel (.xlsx)</span>
+                                    <span class="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-800 px-3 py-1.5 rounded-lg text-xs font-bold">✅ CSV</span>
+                                    <span class="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold">❌ PDF</span>
                                 </div>
                             </div>
-                            <button type="button" id="removeFile" class="text-red-500 hover:text-red-700">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </div>
+
+                        <div class="step-card relative">
+                            <div class="step-connector"></div>
+                            <div class="step-num">7</div>
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900 mb-1">Tap "Continue" &amp; "Send to Email"</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed">Tap <strong>"Continue"</strong>, then <strong>"Send to Email"</strong> to receive the file.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-card relative">
+                            <div class="step-num" style="background:linear-gradient(135deg,#05652D,#10B981)">8</div>
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-900 mb-1">Download from Email &amp; Upload Here</h4>
+                                <p class="text-gray-500 text-sm leading-relaxed">
+                                    Open your <strong>email</strong>, download the Excel/CSV file, and
+                                    <strong class="text-[#05652D]">upload it here</strong> to get your yearly analysis! 🚀
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <button onclick="document.getElementById('upload').scrollIntoView({behavior:'smooth'})"
+                            class="btn-p px-10 py-4 text-base inline-flex items-center gap-2">
+                        Got my statement — Let's Analyze! 🚀
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ============================================================
+     UPLOAD & DASHBOARD
+============================================================ -->
+<section id="upload" class="py-24 px-4 bg-[#f8fafc]">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+
+            <!-- LEFT COLUMN -->
+            <div>
+                <div class="mb-8 reveal">
+                    <p class="text-sm font-bold text-[#05652D] tracking-widest uppercase mb-2">Upload</p>
+                    <h3 class="text-3xl font-extrabold text-gray-900">Upload Your Statement</h3>
+                    <p class="text-gray-400 text-sm mt-2">
+                        Only <strong>Excel (.xlsx)</strong> and <strong>CSV</strong> formats accepted.
+                        <a href="#download-guide" class="text-[#05652D] font-semibold hover:underline">Need help?</a>
+                    </p>
+                </div>
+
+                <!-- Upload Zone -->
+                <div id="uploadArea" class="upload-zone bg-white p-10 sm:p-14 text-center cursor-pointer mb-6 reveal">
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="hidden">
+                    <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-[#ecfdf5] flex items-center justify-center">
+                        <svg class="w-8 h-8 text-[#05652D]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                        </svg>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-1">Drop your file here or click to browse</h4>
+                    <p class="text-gray-400 text-sm mb-2">Supports <strong>Excel (.xlsx)</strong> and <strong>CSV</strong> only</p>
+                    <p class="text-gray-300 text-xs mb-6">Max 10 MB • PDF not supported</p>
+                    <button type="button" id="uploadBtn" class="btn-p px-8 py-3 text-sm">Choose File</button>
+                </div>
+
+                <!-- Inline Error -->
+                <div id="inlineError" class="hidden mb-6">
+                    <div class="bg-red-50 border-2 border-red-300 rounded-2xl p-5 flex items-start gap-4">
+                        <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-xl">🚫</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-red-800 text-sm mb-1">Rejected: Unsupported File Format</p>
+                            <p id="inlineErrorMsg" class="text-red-700 text-sm leading-relaxed">
+                                Please upload as <strong>Excel (.xlsx)</strong> or <strong>CSV</strong>.
+                            </p>
+                            <a href="#download-guide" class="inline-flex items-center gap-1 mt-2 text-xs font-bold text-[#05652D] hover:underline">
+                                📖 Learn how to download in Excel format →
+                            </a>
+                        </div>
+                        <button onclick="document.getElementById('inlineError').classList.add('hidden')"
+                                class="text-red-400 hover:text-red-600 transition-colors flex-shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Info -->
+                <div id="fileInfo" class="hidden mb-6 reveal">
+                    <div class="bg-[#ecfdf5] border-2 border-[#05652D]/30 rounded-2xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-4 min-w-0">
+                                <div class="w-12 h-12 gradient-opay rounded-xl flex items-center justify-center text-white text-xl flex-shrink-0">📄</div>
+                                <div class="min-w-0">
+                                    <p id="fileName" class="font-bold text-gray-900 truncate max-w-[200px] sm:max-w-none" title=""></p>
+                                    <p id="fileSize" class="text-xs text-gray-500 mt-0.5"></p>
+                                </div>
+                            </div>
+                            <button type="button" id="removeFile" class="text-red-400 hover:text-red-600 transition-colors p-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
                             </button>
                         </div>
-                        <button type="button" id="analyzeBtn" class="w-full gradient-opay text-white py-4 rounded-lg font-bold text-lg hover:shadow-lg transition-all">
-                            🚀 Analyze with AI
+                        <button type="button" id="analyzeBtn" class="w-full btn-p py-4 text-base flex items-center justify-center gap-2">
+                            <span id="analyzeBtnText">🚀 Analyze with AI</span>
+                            <svg id="analyzeSpinner" class="hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
                         </button>
-                    </div>
-                    <!-- Stats Display -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                            <div class="text-sm text-gray-600 mb-2">Spending vs Income Gap</div>
-                            <div
-                                id="totalBalance"
-                                class="font-bold text-opay-green
-                                        text-2xl sm:text-3xl
-                                        break-all sm:break-normal"
-                                >
-                                ₦0.00
-                            </div>
-
-                        </div>
-                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                            <div class="text-sm text-gray-600 mb-2">Transactions</div>
-                            <div id="transactionCount" class="text-3xl font-bold text-gray-900">0</div>
-                        </div>
-                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                            <div class="text-sm text-gray-600 mb-2">Total Income</div>
-                            <div id="totalIncome" class="text-3xl font-bold text-green-600">₦0</div>
-                        </div>
-                        <div class="stat-card bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                            <div class="text-sm text-gray-600 mb-2">Total Expenses</div>
-                            <div id="totalExpense" class="text-3xl font-bold text-red-600">₦0</div>
+                        <div id="analyzeProgress" class="hidden mt-3">
+                            <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+                            <p id="progressText" class="text-xs text-gray-500 mt-2 text-center">Processing…</p>
                         </div>
                     </div>
-                    <!-- Monthly Income vs Expenses Chart -->
-                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm mt-6">
-                    <h3 class="text-lg font-semibold mb-4">Monthly Income vs Expenses</h3>
-
-                    <!-- Chart wrapper with fixed height -->
-                    <div class="relative h-72">
-                        <canvas id="monthlyBarChart"></canvas>
-                    </div>
-                    </div>
-                    
-                    <!-- Secondary Insights Row -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-
-                        <!-- Top 10 Recipients -->
-                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm h-[260px] flex flex-col">
-                            <h3 class="text-sm font-semibold text-gray-700 mb-3">
-                                Top 10 Recipients
-                            </h3>
-
-                            <ul id="topRecipientsList"
-                                class="space-y-2 text-sm overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300">
-
-                        </div>
-
-                        <!-- Most Expensive Day -->
-                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm h-[260px] flex flex-col justify-between">
-                            <div>
-                                <h3 class="text-sm font-semibold text-gray-700 mb-2">
-                                    Most Expensive Day
-                                </h3>
-                                <p id="mostExpensiveDate" class="text-xs text-gray-500">
-                                    --
-                                </p>
-                            </div>
-
-                            <div class="text-2xl font-bold text-red-600">
-                                <span id="mostExpensiveAmount">₦0.00</span>
-                            </div>
-                        </div>
-
-                        <!-- Total Data Spend -->
-                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm h-[260px] flex flex-col justify-between">
-                            <div>
-                                <h3 class="text-sm font-semibold text-gray-700 mb-2">
-                                    Data Spend
-                                </h3>
-                                <p class="text-xs text-gray-500">
-                                    Total spent on data & airtime
-                                </p>
-                            </div>
-
-                            <div class="text-2xl font-bold text-orange-600">
-                                <span id="dataSpend">₦0.00</span>
-                            </div>
-                        </div>
-
-                        <!-- Weekday Activity (Unified Card) -->
-                        <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                            
-                            <h3 class="text-sm font-semibold text-gray-700 mb-4">
-                                Transactions by Day of Week
-                            </h3>
-
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-
-                                <!-- Pie Chart -->
-                                <div class="md:col-span-2 flex items-center justify-center">
-                                    <div class="relative h-[220px] w-full">
-                                        <canvas id="weekdayPieChart"></canvas>
-                                    </div>
-                                </div>
-
-                                <!-- Compact Insight -->
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 h-full flex flex-col justify-center">
-                                    
-                                    <p class="text-xs text-gray-500 mb-3">
-                                        Weekly Insight
-                                    </p>
-
-                                    <p class="text-sm text-gray-700 mb-1">
-                                        Most Active Day
-                                    </p>
-                                    <p class="text-xl font-bold text-gray-900 mb-3" id="mostActiveDay">
-                                        Friday
-                                    </p>
-
-                                    <div class="space-y-1">
-                                        <p class="text-sm text-gray-600">
-                                            Transactions:
-                                            <span class="font-semibold text-gray-900" id="mostActiveDayCount">
-                                                812
-                                            </span>
-                                        </p>
-
-                                        <p class="text-xs text-gray-500">
-                                            You transact
-                                            <span class="font-semibold text-opay-green" id="weekdayComparisonPct">
-                                                23%
-                                            </span>
-                                            more on this day than average
-                                        </p>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                        
-
-
-
-                    </div>
-
-
-
                 </div>
-                <!-- RIGHT COLUMN: AI Chat Interface -->
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col h-[700px]">
 
-                    <!-- Chat Header -->
-                    <div class="gradient-opay text-white p-6 flex-shrink-0">
+                <!-- Stats -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="stat-m bg-white p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-7 h-7 rounded-lg bg-[#ecfdf5] flex items-center justify-center text-xs">💰</div>
+                            <span class="text-xs text-gray-500 font-medium">Net Balance</span>
+                        </div>
+                        <div id="totalBalance" class="text-xl sm:text-2xl font-extrabold text-[#05652D] break-all sm:break-normal">₦0.00</div>
+                    </div>
+                    <div class="stat-m bg-white p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-xs">🔢</div>
+                            <span class="text-xs text-gray-500 font-medium">Transactions</span>
+                        </div>
+                        <div id="transactionCount" class="text-xl sm:text-2xl font-extrabold text-gray-900">0</div>
+                    </div>
+                    <div class="stat-m bg-white p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center text-xs">📈</div>
+                            <span class="text-xs text-gray-500 font-medium">Total Income</span>
+                        </div>
+                        <div id="totalIncome" class="text-xl sm:text-2xl font-extrabold text-green-600">₦0</div>
+                    </div>
+                    <div class="stat-m bg-white p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-xs">📉</div>
+                            <span class="text-xs text-gray-500 font-medium">Total Expenses</span>
+                        </div>
+                        <div id="totalExpense" class="text-xl sm:text-2xl font-extrabold text-red-500">₦0</div>
+                    </div>
+                </div>
+
+                <!-- Monthly Chart -->
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
+                    <h4 class="text-sm font-bold text-gray-700 mb-4">Monthly Income vs Expenses</h4>
+                    <div class="relative h-72"><canvas id="monthlyBarChart"></canvas></div>
+                </div>
+
+                <!-- Secondary Insights -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm h-[260px] flex flex-col">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Top Recipients</h4>
+                        <ul id="topRecipientsList" class="space-y-2 text-sm flex-1 overflow-y-auto scroll-slim pr-1"></ul>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm h-[260px] flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Most Expensive Day</h4>
+                            <p id="mostExpensiveDate" class="text-xs text-gray-400 mt-1">--</p>
+                        </div>
+                        <div class="text-2xl font-extrabold text-red-500"><span id="mostExpensiveAmount">₦0.00</span></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm h-[260px] flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Data &amp; Airtime</h4>
+                            <p class="text-xs text-gray-400 mt-1">Total spent on connectivity</p>
+                        </div>
+                        <div class="text-2xl font-extrabold text-orange-500"><span id="dataSpend">₦0.00</span></div>
+                    </div>
+                </div>
+
+                <!-- Weekday Chart -->
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h4 class="text-sm font-bold text-gray-700 mb-5">Spending by Day of Week</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
+                        <div class="md:col-span-2 flex items-center justify-center">
+                            <div class="relative h-[220px] w-full"><canvas id="weekdayPieChart"></canvas></div>
+                        </div>
+                        <div class="bg-[#f8fafc] rounded-xl p-5 border border-gray-100 flex flex-col justify-center">
+                            <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-3">Weekly Insight</p>
+                            <p class="text-xs text-gray-500 mb-1">Most Active Day</p>
+                            <p id="mostActiveDay" class="text-xl font-extrabold text-gray-900 mb-3">—</p>
+                            <p class="text-xs text-gray-500">Transactions: <span id="mostActiveDayCount" class="font-bold text-gray-900">0</span></p>
+                            <p class="text-[11px] text-gray-400 mt-1"><span id="weekdayComparisonPct" class="font-bold text-[#05652D]">0%</span> more than average</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN — CHAT -->
+            <div class="lg:sticky lg:top-24 lg:self-start">
+                <div class="chat-wrap bg-white flex flex-col h-[700px]">
+                    <div class="gradient-opay text-white p-5 flex-shrink-0">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-2xl">
-                                🤖
-                            </div>
+                            <div class="w-11 h-11 bg-white/15 backdrop-blur rounded-full flex items-center justify-center text-xl">🤖</div>
                             <div>
-                                <div class="font-bold text-lg">AI Financial Assistant</div>
-                                <div class="text-sm text-white/80 flex items-center gap-2">
-                                    <div class="w-2 h-2 bg-green-300 rounded-full pulse"></div>
-                                    <span>Online & Ready</span>
+                                <div class="font-bold text-[15px]">AI Financial Assistant</div>
+                                <div class="text-xs text-white/60 flex items-center gap-1.5 mt-0.5">
+                                    <span class="w-[6px] h-[6px] bg-[#34D399] rounded-full pulse-dot"></span> Online
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Chat Messages (SCROLLABLE) -->
-                    <div
-                        id="chatMessages"
-                        class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50"
-                    >
-                        <!-- Welcome Message -->
-                        <div class="flex gap-3 items-start chat-message">
-                            <div class="w-10 h-10 gradient-opay rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                                AI
-                            </div>
-                            <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm max-w-md border border-gray-100">
-                                <p class="text-gray-900">
-                                    👋 Hi! I’m your AI financial assistant.  
-                                    Upload your statement and ask me anything about your spending, savings, or habits.
+                    <div id="chatMessages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-[#f8fafc]" style="scroll-behavior:smooth">
+                        <div class="flex gap-3 items-start msg-anim">
+                            <div class="w-9 h-9 gradient-opay rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+                            <div class="bubble-ai p-4 shadow-sm max-w-[85%]">
+                                <p class="text-gray-800 text-sm leading-relaxed">
+                                    👋 <strong>Welcome to OPay Wrapped!</strong><br><br>
+                                    Upload your statement and I'll give you a complete year-in-review.<br><br>
+                                    📌 <em>Only Excel (.xlsx) and CSV files accepted.</em>
+                                    <a href="#download-guide" class="text-[#05652D] font-semibold underline">See download guide</a>
                                 </p>
                             </div>
                         </div>
-
-                        <!-- Typing Indicator (hidden by default) -->
-                        <div class="typing-indicator hidden gap-3 items-start">
-                            <div class="w-10 h-10 gradient-opay rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                                AI
-                            </div>
-                            <div class="bg-white rounded-2xl rounded-tl-none px-5 py-3 shadow-sm border border-gray-100">
-                                <div class="flex gap-1">
-                                    <div class="dot w-2 h-2 bg-gray-400 rounded-full"></div>
-                                    <div class="dot w-2 h-2 bg-gray-400 rounded-full"></div>
-                                    <div class="dot w-2 h-2 bg-gray-400 rounded-full"></div>
-                                </div>
+                        <div id="typingIndicator" class="hidden gap-3 items-start">
+                            <div class="w-9 h-9 gradient-opay rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+                            <div class="bubble-ai px-5 py-3 shadow-sm">
+                                <div class="flex gap-1.5"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Chat Input (FIXED AT BOTTOM) -->
-                    <div class="border-t border-gray-200 p-4 bg-white flex-shrink-0">
+                    <div id="chatSuggestions" class="hidden border-t border-gray-100 px-4 py-3 bg-white flex gap-2 overflow-x-auto flex-shrink-0">
+                        <button class="chip" data-msg="What's my biggest expense category?">💰 Top Expenses</button>
+                        <button class="chip" data-msg="How can I save more money?">💡 Savings Tips</button>
+                        <button class="chip" data-msg="Analyze my weekend vs weekday spending">📅 Weekend Spending</button>
+                        <button class="chip" data-msg="Give me a financial health summary">❤️ Health Check</button>
+                    </div>
+
+                    <div class="border-t border-gray-100 p-4 bg-white flex-shrink-0">
                         <div class="flex gap-3 items-center">
-                            <input
-                                type="text"
-                                id="chatInput"
-                                placeholder="Ask me anything about your finances..."
-                                class="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-opay-green focus:border-transparent"
-                            />
-                            <button
-                                type="button"
-                                id="sendBtn"
-                                class="gradient-opay text-white px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all"
-                            >
+                            <input type="text" id="chatInput" placeholder="Ask me about your finances…"
+                                   class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm
+                                          focus:outline-none focus:ring-2 focus:ring-[#05652D]/20 focus:border-[#05652D]
+                                          placeholder:text-gray-400 transition-all">
+                            <button type="button" id="sendBtn" class="btn-p px-5 py-3 text-sm flex items-center gap-1.5">
                                 Send
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
+                                </svg>
                             </button>
                         </div>
                     </div>
-
                 </div>
+            </div>
 
+        </div>
+    </div>
+</section>
+
+
+<!-- FOOTER -->
+<footer class="bg-[#022B13] text-white py-16 px-4">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 mb-12">
+            <div>
+                <div class="flex items-center gap-2.5 mb-4">
+                    <div class="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center">
+                        <span class="text-lg font-black text-white">O</span>
+                    </div>
+                    <span class="font-bold text-lg">OPay Wrapped</span>
+                </div>
+                <p class="text-white/50 text-sm leading-relaxed">AI-powered financial intelligence. Your year-in-review, simplified.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm uppercase tracking-wider text-white/70">Quick Links</h4>
+                <ul class="space-y-2.5 text-sm text-white/50">
+                    <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+                    <li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+                    <li><a href="#download-guide" class="hover:text-white transition-colors">Download Guide</a></li>
+                    <li><a href="#upload" class="hover:text-white transition-colors">Get Started</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-sm uppercase tracking-wider text-white/70">Security</h4>
+                <p class="text-white/50 text-sm leading-relaxed">🔒 Your data is encrypted end-to-end. Statements are never stored permanently.</p>
             </div>
         </div>
-    </section>
-    <!-- ========================================
-         FOOTER
-    ======================================== -->
-    <footer class="opay-green text-white py-12 px-4">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <!-- About -->
-                <div>
-                    <h4 class="font-bold text-lg mb-4">OPay Statement Analyzer</h4>
-                    <p class="text-white/80 text-sm">AI-powered financial intelligence for smarter money management.</p>
-                </div>
-                
-                <!-- Quick Links -->
-                <div>
-                    <h4 class="font-bold text-lg mb-4">Quick Links</h4>
-                    <ul class="space-y-2 text-sm text-white/80">
-                        <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
-                        <li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
-                        <li><a href="#upload" class="hover:text-white transition-colors">Get Started</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Security -->
-                <div>
-                    <h4 class="font-bold text-lg mb-4">Security</h4>
-                    <p class="text-white/80 text-sm">🔒 Your data is encrypted and secure. We never store your bank statements permanently.</p>
-                </div>
-            </div>
-            
-            <!-- Copyright -->
-            <div class="border-t border-white/20 pt-8 text-center text-white/80 text-sm">
-                <p>&copy; 2025 OPay Statement Analyzer. Powered by OpenAI GPT-4.</p>
-            </div>
+        <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p class="text-white/40 text-xs">&copy; 2025 OPay Wrapped. All rights reserved.</p>
+            <p class="text-white/30 text-xs">Powered by Groq AI & FastAPI</p>
         </div>
-    </footer>
-    <!-- ========================================
-         JAVASCRIPT
-    ======================================== -->
-    <script>
-        // ========================================
-        // DOM ELEMENT REFERENCES
-        // ========================================
-        const uploadArea = document.getElementById('uploadArea');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const removeFile = document.getElementById('removeFile');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const typingIndicator = document.querySelector('.typing-indicator');
-        let uploadedFile = null;
-        let analysisData = null;   // ✅ THIS LINE MUST EXIST
-
-        // ========================================
-        // FILE UPLOAD HANDLERS
-        // ========================================
-        
-        // Click button to open file dialog
-        uploadBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            fileInput.click();
-        });
-        // Click upload area to open file dialog
-        uploadArea.addEventListener('click', (e) => {
-            // Only trigger if clicking on the upload area itself, not the button
-            if (e.target === uploadArea || 
-                e.target.closest('svg') || 
-                e.target.closest('h4') || 
-                e.target.closest('p')) {
-                fileInput.click();
-            }
-        });
-        // Handle file selection
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        });
-        // Drag and Drop handlers
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('border-opay-green', 'bg-opay-green-lighter');
-        });
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('border-opay-green', 'bg-opay-green-lighter');
-        });
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('border-opay-green', 'bg-opay-green-lighter');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
-            }
-        });
-        // ========================================
-        // FILE HANDLING FUNCTIONS
-        // ========================================
-        
-        function handleFile(file) {
-            const allowedTypes = ['.pdf', '.csv', '.xlsx', '.xls'];
-            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-            
-            // Validate file type
-            if (!allowedTypes.includes(fileExt)) {
-                addAIMessage('⚠️ Please upload a valid file format (PDF, CSV, or XLSX).');
-                return;
-            }
-            // Validate file size (10MB max)
-            if (file.size > 10 * 1024 * 1024) {
-                addAIMessage('⚠️ File size must be less than 10MB.');
-                return;
-            }
-            // Store file and update UI
-            uploadedFile = file;
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            fileInfo.classList.remove('hidden');
-            uploadArea.classList.add('hidden');
-            addAIMessage(`✅ Perfect! I received your file "${file.name}". Click "Analyze with AI" to start the analysis, or ask me any questions!`);
-        }
-        // Remove file handler
-        removeFile.addEventListener('click', () => {
-            uploadedFile = null;
-            fileInput.value = '';
-            fileInfo.classList.add('hidden');
-            uploadArea.classList.remove('hidden');
-            addAIMessage('File removed. Feel free to upload another statement when ready!');
-        });
-        // Format file size
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        }
-        // ========================================
-        // ANALYZE BUTTON - API INTEGRATION
-        // ========================================
-        
-        analyzeBtn.addEventListener('click', async () => {
-            if (!uploadedFile) {
-                addAIMessage('⚠️ Please upload a file before analysis.');
-                return;
-            }
-            showTypingIndicator();
-            const formData = new FormData();
-            formData.append('file', uploadedFile);
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-
-                analysisData = data;
-
-                console.log("FULL BACKEND RESPONSE:", data);
-                console.log("CATEGORIES:", data.categories);
-
-                hideTypingIndicator();
-
-                if (data.error) {
-                    addAIMessage(`❌ Error: ${data.error}`);
-                    console.error(data.traceback || '');
-                    return;
-                }
-                
-                // Update stats display safely
-                document.getElementById('totalBalance').textContent = data.stats.totalBalanceFormatted;
-                document.getElementById('totalIncome').textContent = data.stats.totalIncomeFormatted;
-                document.getElementById('totalExpense').textContent = data.stats.totalExpenseFormatted;
-                document.getElementById('transactionCount').textContent = data.stats.transactionCount;
-                document.getElementById('dataSpend').textContent = data.stats.dataAirtimeSpend || '₦0.00';
-                document.getElementById('mostExpensiveDate').textContent = data.stats.busiestDay;
-                document.getElementById('mostExpensiveAmount').textContent = data.stats.busiestDayAmount;
-                document.getElementById('weekdayPieChart').textContent = data.stats.weekdayBreakdown;
-                // console.log("TOP RECIPIENTS:", data.topRecipients);
-                // Render the weekday pie chart and compact insight
-                if (data.weekdayBreakdown) {
-                    renderWeekdayPieChart(data.weekdayBreakdown);
-                } else {
-                    console.warn("No weekdayBreakdown data from backend");
-                }
-
-                const recipientsList = document.getElementById('topRecipientsList');
-                recipientsList.innerHTML = '';
-
-                const topRecipients = data.topRecipients;
-
-                if (Array.isArray(topRecipients) && topRecipients.length > 0) {
-                    topRecipients.slice(0, 10).forEach((recipient, index) => {
-                        const li = document.createElement('li');
-                        li.className = 'flex justify-between text-sm';
-
-                        li.innerHTML = `
-                            <span class="text-gray-700 truncate max-w-[65%]">
-                                ${index + 1}. ${recipient.name}
-                            </span>
-                            <span class="font-semibold text-red-600">
-                                ₦${recipient.amount.toLocaleString()}
-                            </span>
-                        `;
-
-                        recipientsList.appendChild(li);
-                    });
-                } else {
-                    recipientsList.innerHTML =
-                        '<li class="text-gray-400 text-sm">No recipient data</li>';
-                }
-
-                
-
-                // AFTER successful response
-                renderMonthlyBarChart(data.monthlyBreakdown);
-                renderWeekdayPieChart(data.weekdayBreakdown);
-
-                // ---------------- Weekday Pie Chart Renderer ----------------
-                function renderWeekdayPieChart(weekdayBreakdown) {
-                    const weekdayCtx = document.getElementById('weekdayPieChart').getContext('2d');
-
-                    // Destroy previous chart if it exists
-                    if (window.weekdayChart) {
-                        window.weekdayChart.destroy();
-                    }
-
-                    // Default to empty array if undefined
-                    const weekdayData = Array.isArray(weekdayBreakdown) ? weekdayBreakdown : [];
-
-                    if (!weekdayData.length) {
-                        // No data, show placeholder
-                        document.getElementById('mostActiveDay').textContent = 'N/A';
-                        document.getElementById('mostActiveDayCount').textContent = '0';
-                        document.getElementById('weekdayComparisonPct').textContent = '0%';
-                        return;
-                    }
-
-                    // Extract labels and values
-                    const dayLabels = weekdayData.map(d => d.day);
-                    const dayValues = weekdayData.map(d => d.total_spent);
-
-                    // Find most active day
-                    let maxValue = Math.max(...dayValues);
-                    let maxIndex = dayValues.indexOf(maxValue);
-                    const maxDay = dayLabels[maxIndex];
-
-                    // Total and average for comparison
-                    const totalValue = dayValues.reduce((a, b) => a + b, 0);
-                    const avgValue = totalValue / dayValues.length;
-                    const pct = avgValue > 0 ? ((maxValue - avgValue) / avgValue * 100).toFixed(1) : 0;
-
-                    // Update compact insight card
-                    document.getElementById('mostActiveDay').textContent = maxDay;
-                    document.getElementById('mostActiveDayCount').textContent = maxValue.toLocaleString();
-                    document.getElementById('weekdayComparisonPct').textContent = `${pct}%`;
-
-                    // Colors: max day = Opay green (#10B981), others = dark orange (#C2410C)
-                    const colors = dayValues.map(val => val === maxValue ? '#10B981' : '#C2410C');
-
-                    // Render Pie Chart
-                    window.weekdayChart = new Chart(weekdayCtx, {
-                        type: 'pie',
-                        data: {
-                            labels: dayLabels,
-                            datasets: [{
-                                data: dayValues,
-                                backgroundColor: colors,
-                                borderColor: '#fff',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        boxWidth: 12,
-                                        padding: 10
-                                    }
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            const value = context.raw;
-                                            return `${context.label}: ₦${value.toLocaleString()}`;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
+    </div>
+</footer>
 
 
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+// ===========================================================
+//  DOM REFS
+// ===========================================================
+const uploadArea       = document.getElementById('uploadArea');
+const uploadBtn        = document.getElementById('uploadBtn');
+const fileInput        = document.getElementById('fileInput');
+const fileInfo         = document.getElementById('fileInfo');
+const fileNameEl       = document.getElementById('fileName');
+const fileSizeEl       = document.getElementById('fileSize');
+const removeFileBtn    = document.getElementById('removeFile');
+const analyzeBtn       = document.getElementById('analyzeBtn');
+const analyzeBtnText   = document.getElementById('analyzeBtnText');
+const analyzeSpinner   = document.getElementById('analyzeSpinner');
+const analyzeProgress  = document.getElementById('analyzeProgress');
+const progressFill     = document.getElementById('progressFill');
+const progressText     = document.getElementById('progressText');
+const chatMessages     = document.getElementById('chatMessages');
+const chatInput        = document.getElementById('chatInput');
+const sendBtn          = document.getElementById('sendBtn');
+const typingIndicator  = document.getElementById('typingIndicator');
+const chatSuggestions  = document.getElementById('chatSuggestions');
+const hamburgerBtn     = document.getElementById('hamburgerBtn');
+const mobileMenu       = document.getElementById('mobileMenu');
+const hamburgerIcon    = document.getElementById('hamburgerIcon');
+const closeIcon        = document.getElementById('closeIcon');
+const mainNav          = document.getElementById('mainNav');
+const errorToast       = document.getElementById('errorToast');
+const errorToastClose  = document.getElementById('errorToastClose');
+const errorToastLink   = document.getElementById('errorToastLink');
+const inlineError      = document.getElementById('inlineError');
 
-                addAIMessage(data.advice || '✅ Analysis complete! Ask me anything about your finances.');
+let uploadedFile    = null;
+let analysisData    = null;
+let monthlyChart    = null;
+let errorToastTimer = null;
 
-            } catch (err) {
-                hideTypingIndicator();
-                addAIMessage('❌ Server error. Please try again.');
-                console.error('Analysis error:', err);
-            }
-        });
-        // MONTHLY SPENDING TREND
-        let monthlyChart = null;
+// ===========================================================
+//  ACCORDION LOGIC
+// ===========================================================
+document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+        const targetId  = trigger.dataset.target;
+        const body      = document.getElementById(targetId);
+        const expanded  = trigger.getAttribute('aria-expanded') === 'true';
 
-        function renderMonthlyBarChart(monthlyData) {
-            if (!monthlyData || monthlyData.length === 0) return;
-
-            const labels = monthlyData.map(item => item.month);
-            const incomeData = monthlyData.map(item => item.credit_raw || 0);
-            const expenseData = monthlyData.map(item => item.debit_raw || 0);
-
-            const ctx = document.getElementById('monthlyBarChart').getContext('2d');
-
-            // Destroy old chart if it exists (important for re-upload)
-            if (monthlyChart) {
-                monthlyChart.destroy();
-            }
-
-            monthlyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Income',
-                            data: incomeData,
-                            backgroundColor: '#15803d' // dark green
-                        },
-                        {
-                            label: 'Expenses',
-                            data: expenseData,
-                            backgroundColor: '#c2410c' // dark orange
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ₦${context.raw.toLocaleString()}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '₦' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                }
+        if (expanded) {
+            // CLOSE
+            body.style.maxHeight = body.scrollHeight + 'px';
+            requestAnimationFrame(() => {
+                body.style.maxHeight = '0px';
+                body.classList.remove('open');
             });
+            trigger.setAttribute('aria-expanded', 'false');
+        } else {
+            // OPEN
+            body.style.maxHeight = body.scrollHeight + 'px';
+            body.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+
+            // After transition, set to auto so inner content can resize
+            const handler = () => {
+                body.style.maxHeight = 'none';
+                body.removeEventListener('transitionend', handler);
+            };
+            body.addEventListener('transitionend', handler);
+        }
+    });
+});
+
+// Auto-open accordion when clicking nav link to that section
+document.querySelectorAll('a[href^="#features"], a[href^="#how-it-works"], a[href^="#download-guide"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+        const targetId = link.getAttribute('href').substring(1);
+        const section  = document.getElementById(targetId);
+        if (!section) return;
+
+        const trigger = section.querySelector('.accordion-trigger');
+        if (trigger && trigger.getAttribute('aria-expanded') !== 'true') {
+            // Small delay to let scroll happen first
+            setTimeout(() => trigger.click(), 100);
+        }
+    });
+});
+
+// ===========================================================
+//  ERROR TOAST
+// ===========================================================
+function showErrorToast(message) {
+    if (message) document.getElementById('errorToastMsg').innerHTML = message;
+    errorToast.classList.add('visible');
+    if (inlineError) {
+        inlineError.classList.remove('hidden');
+        if (message) document.getElementById('inlineErrorMsg').innerHTML = message;
+    }
+    clearTimeout(errorToastTimer);
+    errorToastTimer = setTimeout(() => errorToast.classList.remove('visible'), 8000);
 }
-        // ========================================
-        // GLOBAL VARIABLES
-        // ========================================
-        // ========================================
-        // CHAT FUNCTIONALITY
-        // ========================================
+function hideErrorToast() {
+    errorToast.classList.remove('visible');
+    clearTimeout(errorToastTimer);
+}
+errorToastClose.addEventListener('click', hideErrorToast);
+errorToastLink.addEventListener('click', () => {
+    hideErrorToast();
+    // Also auto-open the download guide section
+    const trigger = document.querySelector('#download-guide .accordion-trigger');
+    if (trigger && trigger.getAttribute('aria-expanded') !== 'true') {
+        setTimeout(() => trigger.click(), 300);
+    }
+});
 
-        sendBtn.addEventListener('click', sendMessage);
+// ===========================================================
+//  MOBILE NAV
+// ===========================================================
+hamburgerBtn.addEventListener('click', () => {
+    const open = mobileMenu.classList.toggle('open');
+    hamburgerIcon.classList.toggle('hidden', open);
+    closeIcon.classList.toggle('hidden', !open);
+});
+mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburgerIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+    });
+});
 
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
+// ===========================================================
+//  NAV SCROLL SHADOW
+// ===========================================================
+window.addEventListener('scroll', () => {
+    mainNav.classList.toggle('scrolled', window.scrollY > 20);
+}, { passive: true });
 
-        async function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message) return;
+// ===========================================================
+//  SCROLL REVEAL
+// ===========================================================
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-            if (!analysisData) {
-                addAIMessage('📊 Please upload and analyze a statement first.');
-                return;
+// ===========================================================
+//  FILE UPLOAD
+// ===========================================================
+uploadBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+uploadArea.addEventListener('click', (e) => { if (!e.target.closest('button')) fileInput.click(); });
+fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-active'); });
+uploadArea.addEventListener('dragleave', ()  => { uploadArea.classList.remove('drag-active'); });
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault(); uploadArea.classList.remove('drag-active');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file) {
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+
+    if (!['.csv','.xlsx','.xls'].includes(ext)) {
+        let msg = ext === '.pdf'
+            ? `<strong>PDF files are not supported.</strong><br>Please re-download from OPay using <strong>Excel</strong> or <strong>CSV</strong> as file type.`
+            : `<strong>"${esc(ext)}" files are not supported.</strong><br>Upload as <strong>Excel (.xlsx)</strong> or <strong>CSV</strong>.`;
+
+        showErrorToast(msg);
+        addAIMessage(`🚫 **Rejected: Unsupported file format (${esc(ext)})**\n\nPlease upload as Excel (.xlsx) or CSV.\n\n📖 Check the Download Guide to learn how.`);
+        fileInput.value = '';
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        showErrorToast('File too large. Max size is <strong>10 MB</strong>.');
+        addAIMessage('⚠️ File must be under 10 MB.');
+        fileInput.value = '';
+        return;
+    }
+
+    hideErrorToast();
+    if (inlineError) inlineError.classList.add('hidden');
+
+    uploadedFile = file;
+    fileNameEl.textContent = file.name;
+    fileNameEl.title = file.name;
+    fileSizeEl.textContent = formatBytes(file.size);
+    fileInfo.classList.remove('hidden');
+    uploadArea.classList.add('hidden');
+    addAIMessage(`✅ Got it — "${esc(file.name)}" is ready. Hit **Analyze with AI** to see your Wrapped!`);
+}
+
+removeFileBtn.addEventListener('click', () => {
+    uploadedFile = null; fileInput.value = '';
+    fileInfo.classList.add('hidden'); uploadArea.classList.remove('hidden');
+    if (inlineError) inlineError.classList.add('hidden');
+    addAIMessage('File removed. Upload another when ready.');
+});
+
+function formatBytes(b) {
+    if (!b) return '0 B';
+    const k=1024, s=['B','KB','MB'];
+    const i=Math.floor(Math.log(b)/Math.log(k));
+    return (b/Math.pow(k,i)).toFixed(1)+' '+s[i];
+}
+
+// ===========================================================
+//  ANALYZE
+// ===========================================================
+analyzeBtn.addEventListener('click', async () => {
+    if (!uploadedFile) { addAIMessage('⚠️ Upload a file first.'); return; }
+
+    analyzeBtn.disabled = true;
+    analyzeBtnText.textContent = 'Analyzing…';
+    analyzeSpinner.classList.remove('hidden');
+    analyzeProgress.classList.remove('hidden');
+    progressFill.style.width = '0%';
+
+    const steps = [
+        {pct:'25%',txt:'Reading your statement…'},
+        {pct:'50%',txt:'Processing transactions…'},
+        {pct:'75%',txt:'AI analyzing patterns…'},
+    ];
+    let si = 0;
+    const si_int = setInterval(() => {
+        if (si < steps.length) { progressFill.style.width=steps[si].pct; progressText.textContent=steps[si].txt; si++; }
+    }, 1200);
+
+    showTyping();
+    const fd = new FormData(); fd.append('file', uploadedFile);
+
+    try {
+        const res = await fetch('/upload', {method:'POST', body:fd});
+        const data = await res.json();
+        analysisData = data;
+        clearInterval(si_int);
+        progressFill.style.width='100%'; progressText.textContent='Done!';
+        hideTyping();
+
+        if (data.error) { addAIMessage('❌ '+data.error); resetAnalyzeBtn(); return; }
+
+        setText('totalBalance', data.stats.totalBalanceFormatted);
+        setText('totalIncome', data.stats.totalIncomeFormatted);
+        setText('totalExpense', data.stats.totalExpenseFormatted);
+        setText('transactionCount', data.stats.transactionCount);
+        setText('dataSpend', data.stats.dataAirtimeSpend||'₦0.00');
+        setText('mostExpensiveDate', data.stats.busiestDay);
+        setText('mostExpensiveAmount', data.stats.busiestDayAmount);
+
+        const rl = document.getElementById('topRecipientsList'); rl.innerHTML='';
+        const rr = data.topRecipients;
+        if (Array.isArray(rr) && rr.length) {
+            rr.slice(0,10).forEach((r,i) => {
+                const li=document.createElement('li'); li.className='flex justify-between items-center';
+                li.innerHTML=`<span class="text-gray-600 truncate max-w-[60%]"><span class="text-gray-400 mr-1">${i+1}.</span> ${esc(r.name)}</span><span class="font-semibold text-red-500 text-xs">₦${r.amount.toLocaleString()}</span>`;
+                rl.appendChild(li);
+            });
+        } else { rl.innerHTML='<li class="text-gray-300 text-xs">No data yet</li>'; }
+
+        renderMonthlyChart(data.monthlyBreakdown);
+        renderWeekdayChart(data.weekdayBreakdown);
+        chatSuggestions.classList.remove('hidden');
+        addAIMessage(data.advice || '✅ Analysis complete! Ask me anything.');
+        setTimeout(()=>analyzeProgress.classList.add('hidden'),1500);
+
+    } catch(err) {
+        clearInterval(si_int); hideTyping();
+        addAIMessage('❌ Server error — please try again.'); console.error(err);
+    }
+    resetAnalyzeBtn();
+});
+
+function resetAnalyzeBtn() {
+    analyzeBtn.disabled=false; analyzeBtnText.textContent='🚀 Analyze with AI';
+    analyzeSpinner.classList.add('hidden');
+}
+function setText(id,val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+
+// ===========================================================
+//  CHARTS
+// ===========================================================
+function renderMonthlyChart(m) {
+    if(!m||!m.length) return;
+    const ctx=document.getElementById('monthlyBarChart').getContext('2d');
+    if(monthlyChart) monthlyChart.destroy();
+    monthlyChart = new Chart(ctx,{
+        type:'bar',
+        data:{
+            labels:m.map(x=>x.month),
+            datasets:[
+                {label:'Income',data:m.map(x=>x.credit_raw||0),backgroundColor:'#05652D',borderRadius:6,barPercentage:.6},
+                {label:'Expenses',data:m.map(x=>x.debit_raw||0),backgroundColor:'#EF4444',borderRadius:6,barPercentage:.6}
+            ]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            interaction:{mode:'index',intersect:false},
+            plugins:{
+                legend:{position:'top',labels:{usePointStyle:true,pointStyle:'circle',padding:20,font:{size:12,family:'Inter'}}},
+                tooltip:{backgroundColor:'#1e293b',cornerRadius:10,padding:12,
+                    callbacks:{label:c=>`${c.dataset.label}: ₦${c.raw.toLocaleString()}`}}
+            },
+            scales:{
+                y:{beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{font:{size:11,family:'Inter'},callback:v=>'₦'+v.toLocaleString()}},
+                x:{grid:{display:false},ticks:{font:{size:11,family:'Inter'}}}
             }
+        }
+    });
+}
 
-            addUserMessage(message);
-            chatInput.value = '';
-            showTypingIndicator();
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message,
-                        stats: analysisData.stats
-                    })
-                });
-                console.log('analysisData in chat:', analysisData);
-
-                const result = await response.json();
-                hideTypingIndicator();
-
-                addAIMessage(result.response || '🤖 Thinking...');
-
-            } catch (err) {
-                hideTypingIndicator();
-                addAIMessage('❌ Failed to get AI response.');
-                console.error('Chat error:', err);
+function renderWeekdayChart(w) {
+    const ctx=document.getElementById('weekdayPieChart').getContext('2d');
+    if(window._wc) window._wc.destroy();
+    const wd=Array.isArray(w)?w:[];
+    if(!wd.length){setText('mostActiveDay','—');setText('mostActiveDayCount','0');setText('weekdayComparisonPct','0%');return;}
+    const l=wd.map(d=>d.day),v=wd.map(d=>d.total_spent),mx=Math.max(...v),mi=v.indexOf(mx);
+    const avg=v.reduce((a,b)=>a+b,0)/v.length,pct=avg>0?((mx-avg)/avg*100).toFixed(1):0;
+    setText('mostActiveDay',l[mi]);setText('mostActiveDayCount',mx.toLocaleString());setText('weekdayComparisonPct',pct+'%');
+    const pal=['#05652D','#0a8f44','#10B981','#34D399','#6EE7B7','#F59E0B','#EF4444'];
+    window._wc=new Chart(ctx,{
+        type:'doughnut',
+        data:{labels:l,datasets:[{data:v,backgroundColor:pal.slice(0,v.length),borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+        options:{responsive:true,cutout:'55%',
+            plugins:{
+                legend:{position:'bottom',labels:{boxWidth:10,padding:10,font:{size:11,family:'Inter'}}},
+                tooltip:{backgroundColor:'#1e293b',cornerRadius:10,padding:12,callbacks:{label:c=>`${c.label}: ₦${c.raw.toLocaleString()}`}}
             }
         }
+    });
+}
 
-        // ========================================
-        // MESSAGE DISPLAY FUNCTIONS
-        // ========================================
+// ===========================================================
+//  CHAT
+// ===========================================================
+sendBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
+chatSuggestions.querySelectorAll('.chip').forEach(b=>{
+    b.addEventListener('click',()=>{ chatInput.value=b.dataset.msg; sendMessage(); });
+});
 
-        function addUserMessage(message) {
-            const div = document.createElement('div');
-            div.className = 'flex gap-3 items-start justify-end chat-message';
-            div.innerHTML = `
-                <div class="gradient-opay text-white rounded-2xl rounded-tr-none p-4 shadow-sm max-w-md">
-                    <p>${escapeHtml(message)}</p>
-                </div>
-                <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold">
-                    👤
-                </div>
-            `;
-            insertMessage(div);
-        }
+async function sendMessage() {
+    const msg=chatInput.value.trim(); if(!msg) return;
+    if(!analysisData){addAIMessage('📊 Upload and analyze a statement first.');return;}
+    addUserMessage(msg); chatInput.value=''; showTyping();
+    try {
+        const res=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({message:msg,stats:analysisData.stats})});
+        const r=await res.json(); hideTyping();
+        addAIMessage(r.response||'🤖 Let me think…');
+    } catch(err){ hideTyping(); addAIMessage('❌ Couldn\'t reach AI.'); console.error(err); }
+}
 
-        function addAIMessage(message) {
-            const div = document.createElement('div');
-            div.className = 'flex gap-3 items-start chat-message';
-            div.innerHTML = `
-                <div class="w-10 h-10 gradient-opay rounded-full flex items-center justify-center text-white font-bold">
-                    AI
-                </div>
-                <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm max-w-md border">
-                    <p>${escapeHtml(message)}</p>
-                </div>
-            `;
-            insertMessage(div);
-        }
+function addUserMessage(t) {
+    const d=document.createElement('div'); d.className='flex gap-3 items-start justify-end msg-anim';
+    d.innerHTML=`<div class="bubble-user p-3.5 shadow-sm max-w-[80%]"><p class="text-sm leading-relaxed">${esc(t)}</p></div><div class="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center text-sm flex-shrink-0">👤</div>`;
+    insertMsg(d);
+}
+function addAIMessage(t) {
+    const d=document.createElement('div'); d.className='flex gap-3 items-start msg-anim';
+    d.innerHTML=`<div class="w-9 h-9 gradient-opay rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div><div class="bubble-ai p-3.5 shadow-sm max-w-[80%]"><div class="text-sm text-gray-700 leading-relaxed">${formatAI(t)}</div></div>`;
+    insertMsg(d);
+}
+function insertMsg(d) {
+    if(typingIndicator&&typingIndicator.parentNode===chatMessages) chatMessages.insertBefore(d,typingIndicator);
+    else chatMessages.appendChild(d);
+    chatMessages.scrollTop=chatMessages.scrollHeight;
+}
+function showTyping(){if(typingIndicator)typingIndicator.style.display='flex';chatMessages.scrollTop=chatMessages.scrollHeight;}
+function hideTyping(){if(typingIndicator)typingIndicator.style.display='none';}
 
-        // ========================================
-        // SAFE INSERT
-        // ========================================
-
-        function insertMessage(div) {
-            if (typingIndicator && typingIndicator.parentNode === chatMessages) {
-                chatMessages.insertBefore(div, typingIndicator);
-            } else {
-                chatMessages.appendChild(div);
-            }
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // ========================================
-        // TYPING INDICATOR
-        // ========================================
-
-        function showTypingIndicator() {
-            if (!typingIndicator) return;
-            typingIndicator.style.display = 'flex';
-        }
-
-        function hideTypingIndicator() {
-            if (!typingIndicator) return;
-            typingIndicator.style.display = 'none';
-        }
-
-        // ========================================
-        // ESCAPE HTML
-        // ========================================
-
-        function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-    </script>
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function formatAI(t){let s=esc(t);s=s.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');s=s.replace(/\*(.*?)\*/g,'<em>$1</em>');s=s.replace(/\n\n/g,'<br><br>');s=s.replace(/\n/g,'<br>');return s;}
+</script>
 </body>
 </html>

@@ -1,23 +1,25 @@
+# Virtual environment
+ovenv/
+venv/
+.venv/
+
 # Python
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
-.env
-.venv
-venv/
+*.egg-info/
 
-# Uploads & temp files
+# Temp files
 temp_uploads/
-uploads/
+ai_cache/
+
+# Environment
+.env
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-
-# Node (if frontend build later)
-node_modules/
-dist/
+# IDE
+.vscode/
+.idea/

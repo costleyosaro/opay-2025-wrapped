@@ -1,135 +1,171 @@
+# ================================================================
+# ai_advisor.py — Groq-powered financial advisor (FIXED)
+#
+# FIXES APPLIED:
+#  1. generate_advice() now properly handles user_message
+#     (chat endpoint was calling it without user_message before)
+#  2. Stats key lookups are more resilient — handles both
+#     backend keys (total_in) and frontend keys (totalIncomeFormatted)
+#  3. Removed redundant client init check (cleaner flow)
+#  4. Cache only applies to default advice, not chat messages (correct)
+#  5. Better error messages
+# ================================================================
+
 from dotenv import load_dotenv
 from groq import Groq
 import json
 import hashlib
 import os
 
-# Load environment variables
 load_dotenv()
 
-# ===============================
-# AI RESPONSE CACHING
-# ===============================
+# ── Cache directory ──
 CACHE_DIR = "ai_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 
-def get_cache_key(stats: dict) -> str:
-    """
-    Creates a unique hash for a stats dictionary
-    so identical data reuses the same AI response.
-    """
-    raw = json.dumps(stats, sort_keys=True, default=str)
+def _cache_key(data: dict) -> str:
+    """MD5 hash of a dict for cache lookups."""
+    raw = json.dumps(data, sort_keys=True, default=str)
     return hashlib.md5(raw.encode()).hexdigest()
 
 
 class AIFinancialAdvisor:
     """
-    AI-powered financial advisor using Groq (FREE).
-    Flexible enough for general conversation.
+    AI financial advisor using Groq (free tier).
+    Handles both initial analysis summaries and follow-up chat.
     """
 
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
+        self.client = None
 
         if not api_key:
-            print("❌ GROQ_API_KEY not found in environment.")
-            self.client = None
+            print("⚠️  GROQ_API_KEY not found — AI features will be unavailable.")
             return
 
         try:
             self.client = Groq(api_key=api_key)
-            print("✅ Groq AI client initialized successfully.")
         except Exception as e:
-            print(f"❌ Failed to initialize Groq client: {e}")
-            self.client = None
+            print(f"⚠️  Failed to initialize Groq client: {e}")
+
+    # ────────────────────────────────────────────────────────────
+    #  STATS EXTRACTION (handles both backend + frontend keys)
+    # ────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _extract_stat(d: dict, *keys, fallback="N/A"):
+        """
+        Try multiple key names and return the first hit.
+        Handles the mismatch between backend keys (total_in)
+        and frontend keys (totalIncomeFormatted).
+        """
+        for k in keys:
+            val = d.get(k)
+            if val is not None and str(val).strip() not in ("", "N/A", "None"):
+                return val
+        return fallback
+
+    def _build_summary(self, stats: dict) -> str:
+        """Build a human-readable financial summary for the AI prompt."""
+        total_income    = self._extract_stat(stats, "total_in",           "totalIncomeFormatted")
+        total_spent     = self._extract_stat(stats, "total_out",          "totalExpenseFormatted")
+        net_balance     = self._extract_stat(stats, "net",                "totalBalanceFormatted")
+        data_spending   = self._extract_stat(stats, "data_airtime_spend", "dataAirtimeSpend")
+        data_pct        = self._extract_stat(stats, "data_pct",           "dataPct")
+        avg_transaction = self._extract_stat(stats, "avg_spend",          "avgSpend")
+        weekend_pct     = self._extract_stat(stats, "weekend_pct",        "weekendPct")
+        busiest_day     = self._extract_stat(stats, "busiest_day",        "busiestDay")
+        busiest_amount  = self._extract_stat(stats, "busiest_day_amount", "busiestDayAmount")
+        top_month       = self._extract_stat(stats, "top_spending_month", "topMonth")
+
+        return (
+            f"Total Income: {total_income}\n"
+            f"Total Spent: {total_spent}\n"
+            f"Net Balance: {net_balance}\n"
+            f"Data & Airtime Spending: {data_spending} ({data_pct})\n"
+            f"Average Transaction: {avg_transaction}\n"
+            f"Weekend Spending Percentage: {weekend_pct}\n"
+            f"Busiest Day: {busiest_day} ({busiest_amount})\n"
+            f"Top Spending Month: {top_month}\n"
+        )
+
+    # ────────────────────────────────────────────────────────────
+    #  MAIN GENERATE METHOD
+    # ────────────────────────────────────────────────────────────
 
     def generate_advice(self, stats_dict: dict, user_message: str = None) -> str:
         """
-        Generates concise, actionable financial advice
-        based on stats_dict. Can also respond to general
-        user queries if user_message is provided.
+        Generate financial advice or respond to a user question.
+
+        • If user_message is None → initial analysis summary (cacheable).
+        • If user_message is set  → conversational follow-up (not cached).
         """
 
-        # ---------- CHECK CACHE FIRST ----------
-        cache_key = get_cache_key(stats_dict)
-        cache_file = f"{CACHE_DIR}/{cache_key}.txt"
+        # ── Check cache for default advice ──
+        cache_key  = _cache_key(stats_dict)
+        cache_file = os.path.join(CACHE_DIR, f"{cache_key}.txt")
 
-        if os.path.exists(cache_file) and not user_message:
+        if not user_message and os.path.exists(cache_file):
             with open(cache_file, "r", encoding="utf-8") as f:
                 return f.read()
 
         if not self.client:
-            return "⚠️ AI service is not configured properly."
+            return (
+                "⚠️ AI service is not configured. "
+                "Please set the GROQ_API_KEY environment variable."
+            )
 
-        # ---------- EXTRACT STATS SAFELY ----------
-        total_income = stats_dict.get("total_in", "N/A")
-        total_spent = stats_dict.get("total_out", "N/A")
-        net_balance = stats_dict.get("net", "N/A")
-        data_spending = stats_dict.get("data_airtime_spend", "N/A")
-        data_pct = stats_dict.get("data_pct", "N/A")
-        avg_transaction = stats_dict.get("avg_spend", "N/A")
-        weekend_spending_pct = stats_dict.get("weekend_pct", "N/A")
-        busiest_day = stats_dict.get("busiest_day", "N/A")
-        busiest_day_amount = stats_dict.get("busiest_day_amount", "N/A")
-        top_month = stats_dict.get("top_spending_month", "N/A")
+        # ── Build prompt ──
+        stats_summary = self._build_summary(stats_dict)
 
-        stats_summary = f"""
-Total Income: {total_income}
-Total Spent: {total_spent}
-Net Balance: {net_balance}
-Data & Airtime Spending: {data_spending} ({data_pct})
-Average Transaction: {avg_transaction}
-Weekend Spending Percentage: {weekend_spending_pct}
-Busiest Day: {busiest_day} ({busiest_day_amount})
-Top Spending Month: {top_month}
-"""
-
-        # ---------- CREATE SYSTEM PROMPT ----------
         system_prompt = (
-            "You are FinBuddy, a virtual assistant whose primary role is to provide "
-            "personal financial advice. Analyze income, spending, and budgeting patterns "
-            "and give actionable guidance.\n\n"
-            "However, you are friendly and flexible:\n"
-            "- If the user greets you, respond naturally.\n"
-            "- If the user asks general questions unrelated to finance, respond helpfully "
-            "or conversationally.\n"
-            "- Only provide financial advice when the query relates to money, expenses, "
-            "budgeting, or investments.\n\n"
-            "Maintain a professional but approachable tone, even in casual conversation."
+            "You are FinBuddy, a friendly virtual financial advisor. "
+            "Your primary role is to analyze income, spending, and budgeting "
+            "patterns and give actionable, concise guidance.\n\n"
+            "Rules:\n"
+            "- If the user greets you, respond naturally and warmly.\n"
+            "- If the user asks something unrelated to finance, respond "
+            "helpfully or redirect gently.\n"
+            "- When giving financial advice, be specific and reference "
+            "the numbers from the data.\n"
+            "- Use emoji sparingly for friendliness.\n"
+            "- Keep responses concise (3-5 short paragraphs max).\n"
+            "- Format currency in Naira (₦).\n"
         )
 
-        # ---------- CREATE USER MESSAGE ----------
         if user_message:
             user_content = (
-                f"{user_message}\n\nIf relevant, also consider the following financial data:\n"
-                f"{stats_summary}"
+                f"User question: {user_message}\n\n"
+                f"Here is their financial data for context:\n{stats_summary}"
             )
         else:
             user_content = (
-                "Based on the following financial summary, give helpful advice.\n\n"
+                "Based on the following financial summary, give a helpful "
+                "analysis with specific advice.\n\n"
                 "Focus on:\n"
+                "- Key observations from the numbers\n"
                 "- Saving opportunities\n"
-                "- Spending habits\n"
-                "- Budgeting tips\n"
-                "- Specific observations from the data\n\n"
-                "Keep it concise (3–4 short paragraphs).\n\n"
+                "- Spending habit insights\n"
+                "- One actionable tip\n\n"
                 f"Financial Summary:\n{stats_summary}"
             )
 
+        # ── Call Groq API ──
         try:
             response = self.client.chat.completions.create(
-                model="llama-3.3-70b-versatile",  # Fast & Free
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content},
+                    {"role": "user",   "content": user_content},
                 ],
                 temperature=0.7,
+                max_tokens=1024,
             )
 
             advice = response.choices[0].message.content.strip()
 
-            # ---------- SAVE TO CACHE (ONLY FOR FINANCIAL DEFAULT REQUESTS) ----------
+            # Cache default advice only (not user chat)
             if not user_message:
                 with open(cache_file, "w", encoding="utf-8") as f:
                     f.write(advice)
@@ -137,5 +173,5 @@ Top Spending Month: {top_month}
             return advice
 
         except Exception as e:
-            print("❌ Groq AI error:", e)
-            return "⚠️ AI advice could not be generated at the moment."
+            print(f"⚠️  Groq API error: {e}")
+            return "⚠️ AI advice could not be generated right now. Please try again."
