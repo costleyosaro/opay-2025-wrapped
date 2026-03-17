@@ -151,13 +151,41 @@ async def chat(request: Request):
 @app.get("/debug/env")
 def debug_env():
     """
-    Temporary endpoint to verify environment variables.
-    DELETE THIS after confirming it works!
+    Temporary debug endpoint — DELETE after confirming.
     """
+    import sys
+    
     groq_key = os.environ.get("GROQ_API_KEY", "")
+    
+    # Also try loading .env manually right here
+    env_file_exists = os.path.exists(".env")
+    env_contents = ""
+    if env_file_exists:
+        try:
+            with open(".env", "r") as f:
+                env_contents = f.read()
+                # Mask values
+                masked = []
+                for line in env_contents.strip().split("\n"):
+                    if "=" in line:
+                        k, _, v = line.partition("=")
+                        masked.append(f"{k.strip()} = {v.strip()[:5]}...")
+                env_contents = "\n".join(masked)
+        except Exception as e:
+            env_contents = f"Error reading: {e}"
+    
     return {
         "groq_key_set": bool(groq_key),
         "groq_key_length": len(groq_key),
-        "groq_key_preview": groq_key[:8] + "..." if groq_key else "NOT SET",
-        "all_env_with_api": [k for k in os.environ.keys() if "API" in k.upper() or "GROQ" in k.upper() or "KEY" in k.upper()],
+        "groq_key_preview": groq_key[:10] + "..." if groq_key else "EMPTY",
+        "cwd": os.getcwd(),
+        "env_file_exists_in_cwd": env_file_exists,
+        "env_file_contents_masked": env_contents,
+        "python_version": sys.version,
+        "all_relevant_env_vars": {
+            k: v[:8] + "..." 
+            for k, v in os.environ.items() 
+            if any(x in k.upper() for x in ["GROQ", "API", "KEY", "SECRET"])
+        },
+        "advisor_client_status": "initialized" if advisor.client else "NOT initialized",
     }

@@ -1,23 +1,101 @@
 # ================================================================
-# ai_advisor.py — Groq-powered financial advisor (PRODUCTION FIX)
-#
-# FIX: Key is now checked at call-time, not just init-time.
-#      Works reliably on Railway, Render, Heroku, etc.
+# ai_advisor.py — NUCLEAR FIX
+# Exhaustive environment variable loading with full debug output
 # ================================================================
 
-from groq import Groq
 import json
 import hashlib
 import os
+import sys
 
-# Try loading .env for local dev (ignored in production)
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass  # python-dotenv not installed — that's fine in production
+# ── Try every possible way to load .env ──
+def _load_env():
+    """
+    Tries multiple methods to find and load GROQ_API_KEY.
+    """
+    
+    # Method 1: Already in environment (Railway, Docker, etc.)
+    key = os.environ.get("GROQ_API_KEY", "").strip()
+    if key:
+        print(f"✅ GROQ_API_KEY found via os.environ (len={len(key)}, starts={key[:8]}...)")
+        return key
 
-# ── Cache directory ──
+    # Method 2: python-dotenv from current directory
+    try:
+        from dotenv import load_dotenv
+        
+        # Try current working directory
+        cwd_env = os.path.join(os.getcwd(), ".env")
+        if os.path.exists(cwd_env):
+            print(f"📂 Found .env at: {cwd_env}")
+            load_dotenv(cwd_env, override=True)
+            key = os.environ.get("GROQ_API_KEY", "").strip()
+            if key:
+                print(f"✅ GROQ_API_KEY loaded from {cwd_env} (len={len(key)})")
+                return key
+        
+        # Try relative to this file's directory
+        this_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # backend/app/services/ → go up to backend/
+        paths_to_try = [
+            os.path.join(this_dir, ".env"),                          # services/.env
+            os.path.join(this_dir, "..", ".env"),                     # app/.env
+            os.path.join(this_dir, "..", "..", ".env"),               # backend/.env
+            os.path.join(this_dir, "..", "..", "..", ".env"),         # project root/.env
+        ]
+        
+        for env_path in paths_to_try:
+            env_path = os.path.abspath(env_path)
+            if os.path.exists(env_path):
+                print(f"📂 Found .env at: {env_path}")
+                load_dotenv(env_path, override=True)
+                key = os.environ.get("GROQ_API_KEY", "").strip()
+                if key:
+                    print(f"✅ GROQ_API_KEY loaded from {env_path} (len={len(key)})")
+                    return key
+                else:
+                    print(f"⚠️  .env found at {env_path} but GROQ_API_KEY not in it")
+                    # Print contents (masked) for debugging
+                    try:
+                        with open(env_path, "r") as f:
+                            lines = f.readlines()
+                            for line in lines:
+                                line = line.strip()
+                                if line and not line.startswith("#"):
+                                    k, _, v = line.partition("=")
+                                    print(f"    {k.strip()} = {v.strip()[:5]}{'...' if len(v.strip()) > 5 else ''}")
+                    except Exception:
+                        pass
+        
+        # Try bare load_dotenv() as last resort
+        load_dotenv(override=True)
+        key = os.environ.get("GROQ_API_KEY", "").strip()
+        if key:
+            print(f"✅ GROQ_API_KEY loaded via bare load_dotenv() (len={len(key)})")
+            return key
+            
+    except ImportError:
+        print("ℹ️  python-dotenv not installed — skipping .env loading")
+    
+    # Nothing worked
+    print("=" * 60)
+    print("❌ GROQ_API_KEY NOT FOUND ANYWHERE")
+    print(f"   Current working directory: {os.getcwd()}")
+    print(f"   This file location:        {os.path.abspath(__file__)}")
+    print(f"   sys.path:                   {sys.path[:3]}")
+    print(f"   All env vars with 'KEY':    {[k for k in os.environ if 'KEY' in k.upper()]}")
+    print(f"   All env vars with 'GROQ':   {[k for k in os.environ if 'GROQ' in k.upper()]}")
+    print(f"   All env vars with 'API':    {[k for k in os.environ if 'API' in k.upper()]}")
+    print("=" * 60)
+    
+    return ""
+
+
+# Load key at module level
+_GROQ_KEY = _load_env()
+
+# Cache
 CACHE_DIR = "ai_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -28,44 +106,37 @@ def _cache_key(data: dict) -> str:
 
 
 class AIFinancialAdvisor:
-    """
-    AI financial advisor using Groq.
-    Key is loaded fresh each time to handle Railway env var injection.
-    """
 
     def __init__(self):
         self.client = None
-        self._init_client()
+        self._try_init()
 
-    def _init_client(self):
-        """Try to initialize the Groq client. Can be retried."""
-        api_key = os.environ.get("GROQ_API_KEY", "").strip()
-
-        if not api_key:
-            print("⚠️  GROQ_API_KEY not found in environment at init time.")
-            print(f"    Available env vars: {[k for k in os.environ.keys() if 'GROQ' in k.upper() or 'API' in k.upper()]}")
-            self.client = None
+    def _try_init(self):
+        global _GROQ_KEY
+        
+        # Re-check environment in case it was set after module load
+        if not _GROQ_KEY:
+            _GROQ_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+        
+        if not _GROQ_KEY:
+            print("⚠️  AIFinancialAdvisor: No API key available")
             return
 
         try:
-            self.client = Groq(api_key=api_key)
-            print(f"✅ Groq client initialized. Key starts with: {api_key[:8]}...")
+            from groq import Groq
+            self.client = Groq(api_key=_GROQ_KEY)
+            print(f"✅ Groq client created successfully")
+        except ImportError:
+            print("❌ groq package not installed! Run: pip install groq")
+            self.client = None
         except Exception as e:
-            print(f"⚠️  Failed to init Groq: {e}")
+            print(f"❌ Groq client error: {e}")
             self.client = None
 
     def _ensure_client(self):
-        """
-        Lazy retry — if client wasn't ready at startup,
-        try again now (Railway may have injected the var late).
-        """
         if self.client is None:
-            self._init_client()
+            self._try_init()
         return self.client is not None
-
-    # ────────────────────────────────────────────────────────────
-    #  STATS EXTRACTION
-    # ────────────────────────────────────────────────────────────
 
     @staticmethod
     def _extract_stat(d: dict, *keys, fallback="N/A"):
@@ -98,16 +169,8 @@ class AIFinancialAdvisor:
             f"Top Spending Month: {top_month}\n"
         )
 
-    # ────────────────────────────────────────────────────────────
-    #  MAIN GENERATE METHOD
-    # ────────────────────────────────────────────────────────────
-
     def generate_advice(self, stats_dict: dict, user_message: str = None) -> str:
-        """
-        Generate financial advice or respond to a user question.
-        """
 
-        # ── Check cache for default advice ──
         cache_key  = _cache_key(stats_dict)
         cache_file = os.path.join(CACHE_DIR, f"{cache_key}.txt")
 
@@ -115,19 +178,13 @@ class AIFinancialAdvisor:
             with open(cache_file, "r", encoding="utf-8") as f:
                 return f.read()
 
-        # ── Ensure client is ready (lazy retry) ──
         if not self._ensure_client():
-            # Last resort: try reading the key one more time
-            print("❌ Final attempt to read GROQ_API_KEY...")
-            print(f"   os.environ keys containing 'groq': {[k for k in os.environ if 'groq' in k.lower()]}")
-            print(f"   os.getenv result: '{os.environ.get('GROQ_API_KEY', '<NOT SET>')}'")
             return (
                 "⚠️ AI service is not configured. "
                 "The GROQ_API_KEY environment variable was not found. "
                 "Please check your Railway project variables."
             )
 
-        # ── Build prompt ──
         stats_summary = self._build_summary(stats_dict)
 
         system_prompt = (
@@ -162,7 +219,6 @@ class AIFinancialAdvisor:
                 f"Financial Summary:\n{stats_summary}"
             )
 
-        # ── Call Groq API ──
         try:
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
@@ -176,16 +232,15 @@ class AIFinancialAdvisor:
 
             advice = response.choices[0].message.content.strip()
 
-            # Cache default advice only
             if not user_message:
                 try:
                     with open(cache_file, "w", encoding="utf-8") as f:
                         f.write(advice)
                 except OSError:
-                    pass  # cache write failure is non-critical
+                    pass
 
             return advice
 
         except Exception as e:
-            print(f"⚠️  Groq API error: {e}")
+            print(f"⚠️  Groq API call error: {e}")
             return "⚠️ AI advice could not be generated right now. Please try again."
