@@ -147,3 +147,17 @@ async def chat(request: Request):
             {"error": str(e), "traceback": traceback.format_exc()},
             status_code=500,
         )
+
+@app.get("/debug/env")
+def debug_env():
+    """
+    Temporary endpoint to verify environment variables.
+    DELETE THIS after confirming it works!
+    """
+    groq_key = os.environ.get("GROQ_API_KEY", "")
+    return {
+        "groq_key_set": bool(groq_key),
+        "groq_key_length": len(groq_key),
+        "groq_key_preview": groq_key[:8] + "..." if groq_key else "NOT SET",
+        "all_env_with_api": [k for k in os.environ.keys() if "API" in k.upper() or "GROQ" in k.upper() or "KEY" in k.upper()],
+    }

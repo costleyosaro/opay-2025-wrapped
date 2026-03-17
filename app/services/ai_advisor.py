@@ -1,23 +1,21 @@
 # ================================================================
-# ai_advisor.py — Groq-powered financial advisor (FIXED)
+# ai_advisor.py — Groq-powered financial advisor (PRODUCTION FIX)
 #
-# FIXES APPLIED:
-#  1. generate_advice() now properly handles user_message
-#     (chat endpoint was calling it without user_message before)
-#  2. Stats key lookups are more resilient — handles both
-#     backend keys (total_in) and frontend keys (totalIncomeFormatted)
-#  3. Removed redundant client init check (cleaner flow)
-#  4. Cache only applies to default advice, not chat messages (correct)
-#  5. Better error messages
+# FIX: Key is now checked at call-time, not just init-time.
+#      Works reliably on Railway, Render, Heroku, etc.
 # ================================================================
 
-from dotenv import load_dotenv
 from groq import Groq
 import json
 import hashlib
 import os
 
-load_dotenv()
+# Try loading .env for local dev (ignored in production)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed — that's fine in production
 
 # ── Cache directory ──
 CACHE_DIR = "ai_cache"
@@ -25,41 +23,52 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 
 def _cache_key(data: dict) -> str:
-    """MD5 hash of a dict for cache lookups."""
     raw = json.dumps(data, sort_keys=True, default=str)
     return hashlib.md5(raw.encode()).hexdigest()
 
 
 class AIFinancialAdvisor:
     """
-    AI financial advisor using Groq (free tier).
-    Handles both initial analysis summaries and follow-up chat.
+    AI financial advisor using Groq.
+    Key is loaded fresh each time to handle Railway env var injection.
     """
 
     def __init__(self):
-        api_key = os.getenv("GROQ_API_KEY")
         self.client = None
+        self._init_client()
+
+    def _init_client(self):
+        """Try to initialize the Groq client. Can be retried."""
+        api_key = os.environ.get("GROQ_API_KEY", "").strip()
 
         if not api_key:
-            print("⚠️  GROQ_API_KEY not found — AI features will be unavailable.")
+            print("⚠️  GROQ_API_KEY not found in environment at init time.")
+            print(f"    Available env vars: {[k for k in os.environ.keys() if 'GROQ' in k.upper() or 'API' in k.upper()]}")
+            self.client = None
             return
 
         try:
             self.client = Groq(api_key=api_key)
+            print(f"✅ Groq client initialized. Key starts with: {api_key[:8]}...")
         except Exception as e:
-            print(f"⚠️  Failed to initialize Groq client: {e}")
+            print(f"⚠️  Failed to init Groq: {e}")
+            self.client = None
+
+    def _ensure_client(self):
+        """
+        Lazy retry — if client wasn't ready at startup,
+        try again now (Railway may have injected the var late).
+        """
+        if self.client is None:
+            self._init_client()
+        return self.client is not None
 
     # ────────────────────────────────────────────────────────────
-    #  STATS EXTRACTION (handles both backend + frontend keys)
+    #  STATS EXTRACTION
     # ────────────────────────────────────────────────────────────
 
     @staticmethod
     def _extract_stat(d: dict, *keys, fallback="N/A"):
-        """
-        Try multiple key names and return the first hit.
-        Handles the mismatch between backend keys (total_in)
-        and frontend keys (totalIncomeFormatted).
-        """
         for k in keys:
             val = d.get(k)
             if val is not None and str(val).strip() not in ("", "N/A", "None"):
@@ -67,7 +76,6 @@ class AIFinancialAdvisor:
         return fallback
 
     def _build_summary(self, stats: dict) -> str:
-        """Build a human-readable financial summary for the AI prompt."""
         total_income    = self._extract_stat(stats, "total_in",           "totalIncomeFormatted")
         total_spent     = self._extract_stat(stats, "total_out",          "totalExpenseFormatted")
         net_balance     = self._extract_stat(stats, "net",                "totalBalanceFormatted")
@@ -97,9 +105,6 @@ class AIFinancialAdvisor:
     def generate_advice(self, stats_dict: dict, user_message: str = None) -> str:
         """
         Generate financial advice or respond to a user question.
-
-        • If user_message is None → initial analysis summary (cacheable).
-        • If user_message is set  → conversational follow-up (not cached).
         """
 
         # ── Check cache for default advice ──
@@ -110,10 +115,16 @@ class AIFinancialAdvisor:
             with open(cache_file, "r", encoding="utf-8") as f:
                 return f.read()
 
-        if not self.client:
+        # ── Ensure client is ready (lazy retry) ──
+        if not self._ensure_client():
+            # Last resort: try reading the key one more time
+            print("❌ Final attempt to read GROQ_API_KEY...")
+            print(f"   os.environ keys containing 'groq': {[k for k in os.environ if 'groq' in k.lower()]}")
+            print(f"   os.getenv result: '{os.environ.get('GROQ_API_KEY', '<NOT SET>')}'")
             return (
                 "⚠️ AI service is not configured. "
-                "Please set the GROQ_API_KEY environment variable."
+                "The GROQ_API_KEY environment variable was not found. "
+                "Please check your Railway project variables."
             )
 
         # ── Build prompt ──
@@ -165,10 +176,13 @@ class AIFinancialAdvisor:
 
             advice = response.choices[0].message.content.strip()
 
-            # Cache default advice only (not user chat)
+            # Cache default advice only
             if not user_message:
-                with open(cache_file, "w", encoding="utf-8") as f:
-                    f.write(advice)
+                try:
+                    with open(cache_file, "w", encoding="utf-8") as f:
+                        f.write(advice)
+                except OSError:
+                    pass  # cache write failure is non-critical
 
             return advice
 
